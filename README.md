@@ -1,7 +1,6 @@
 # PAWN Painter
 
-PAWN Painter is a Visual Studio Code extension that enhances PAWN development with integrated color picking and preview features.
-It supports standard hexadecimal color formats and SA-MP/open.mp GameText color codes.
+PAWN Painter is a Visual Studio Code extension that enhances PAWN development with integrated color picking and preview features. It supports standard hexadecimal color formats and SA-MP/open.mp GameText color codes.
 
 ## Features
 
@@ -29,6 +28,14 @@ You can configure the extension through VS Code extension settings.
 
 - Toggle Normal Colour Picker (pawnpainter.toggleNormalColorPicker): Enabled by default.
 - Toggle GameText Colour Picker (pawnpainter.toggleGameTextColorPicker): Disabled by default but can be enabled at will.
+
+## Showcase
+
+![Color Picking Feature](assets/showcase.gif)
+
+## Download
+
+You can download PAWN Painter from the Visual Studio Marketplace: [Download PAWN Painter](https://marketplace.visualstudio.com/items?itemName=itsneufox.pawn-painter)
 
 ## Contributing
 
