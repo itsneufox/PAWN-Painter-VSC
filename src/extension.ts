@@ -131,7 +131,7 @@ const colorProvider: vscode.DocumentColorProvider = {
         const text = document.getText();
         
         if (normalColorPickerEnabled) {
-            const colorRegex = /(?:0x[0-9A-Fa-f]{6,8}|\{[0-9A-Fa-f]{6}\}|[0-9A-Fa-f]{6})/g;
+            const colorRegex = /(?:0x[0-9A-Fa-f]{6,8}|\{[0-9A-Fa-f]{6}\}|\b[0-9A-Fa-f]{6}\b)/g;            
             let match;
             while ((match = colorRegex.exec(text)) !== null) {
                 const colorCode = match[0];
