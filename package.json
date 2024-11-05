@@ -1,0 +1,103 @@
+{
+  "name": "pawn-painter",
+  "displayName": "PAWN Painter",
+  "version": "1.0.0",
+  "description": "Colour picker for open.mp",
+  "publisher": "itsneufox",
+  "author": {
+    "name": "itsneufox"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/itsneufox/PAWN-Painter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/itsneufox/PAWN-Painter/issues",
+    "email": "ajuda@tntsamp.com"
+  },
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "pawn",
+    "color",
+    "colour",
+    "highlighter",
+    "syntax",
+    "open.mp",
+    "omp",
+    "open multiplayer",
+    "openmultiplayer",
+    "samp",
+    "vscode",
+    "pawn",
+    "language",
+    "new",
+    "sa:mp",
+    "sa-mp"
+  ],
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#C80000",
+    "theme": "dark"
+  },
+  "main": "./out/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "activationEvents": [
+    "onLanguage:pawn"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "pawnpainter.toggleNormalColorPicker",
+        "title": "Toggle Normal Colour Picker",
+        "category": "PAWN Painter"
+      },
+      {
+        "command": "pawnpainter.toggleGameTextColorPicker",
+        "title": "Toggle GameText Colour Picker",
+        "category": "PAWN Painter"
+      }
+    ],
+    "languages": [
+      {
+        "id": "pawn",
+        "extensions": [".pwn", ".inc", ".p", ".pawno"],
+        "aliases": ["PAWN", "pawn"]
+      }
+    ],
+    "configuration": {
+      "title": "PAWN Painter",
+      "properties": {
+        "pawnpainter.enableColorPicker": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable colour picker for hex colour formats (0xRRGGBB, 0xRRGGBBAA, {RRGGBB} and RRGGBB)"
+        },
+        "pawnpainter.enableGameTextColors": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable colour picker for GameText colour (~r~, ~g~, ~b~, etc.) with brighter colour support (~h~)"
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.8.7",
+    "@types/vscode": "^1.95.0",
+    "@typescript-eslint/eslint-plugin": "^6.9.0",
+    "@typescript-eslint/parser": "^6.9.0",
+    "eslint": "^8.52.0",
+    "typescript": "^5.6.3"
+  }
+}
