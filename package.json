@@ -61,13 +61,13 @@
         "category": "PAWN Painter"
       },
       {
-        "command": "pawnpainter.toggleGameTextColorPicker",
-        "title": "Toggle GameText Colour Preview",
+        "command": "pawnpainter.toggleHexColorHighlight",
+        "title": "Toggle Hex Colour Highlighting",
         "category": "PAWN Painter"
       },
       {
-        "command": "pawnpainter.toggleHexColorHighlight",
-        "title": "Toggle Hex Colour Highlighting",
+        "command": "pawnpainter.toggleGameTextColorPicker",
+        "title": "Toggle GameText Colour Preview",
         "category": "PAWN Painter"
       }
     ],
