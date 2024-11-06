@@ -13,12 +13,12 @@ It provides intuitive colour visualization and editing capabilities for various 
   - `RRGGBB` - Plain hex format
 
 ### ?? GameText Colour Preview
-- Real-time preview of SA-MP/open.mp GameText colors:
-  - Basic colors: `~r~`, `~g~`, `~b~`, `~y~`, `~p~`, `~w~`, `~l~`
+- Real-time preview of SA-MP/open.mp GameText colours:
+  - Basic colours: `~r~`, `~g~`, `~b~`, `~y~`, `~p~`, `~w~`, `~l~`
   - Multiple brightness levels using `~h~` (e.g., `~r~~h~` for brighter red)
 
 ### ??? Colour Highlighting
-- Two highlighting styles for hex colors:
+- Two highlighting styles for hex colours:
   - Underline (default)
   - Background highlight
 
@@ -58,7 +58,7 @@ Configure the extension in VS Code settings:
 {8D1717}      // Curly braces format
 5F0C0C        // Plain hex
 
-// GameText Colors with Brightness Levels
+// GameText Colours with Brightness Levels
 "~r~Basic Red"
 "~r~~h~Bright Red"
 "~r~~h~~h~Brighter Red"
@@ -75,6 +75,7 @@ Configure the extension in VS Code settings:
 
 "~y~Yellow"
 "~y~~h~Bright Yellow"
+"~y~~h~~h~Off White"
 
 "~p~Purple"
 "~p~~h~Light Purple"
@@ -83,11 +84,11 @@ Configure the extension in VS Code settings:
 "~l~Black Text"
 
 // Practical Examples
-#define COLOR_RED 0xFF0000FF
-#define COLOR_GREEN_EMBED "{00FF00}"
+#define COLOUR_RED 0xFF0000FF
+#define COLOUR_GREEN_EMBED "{00FF00}"
 
 SendClientMessage(playerid, -1, "~r~Red ~g~Green ~b~Blue");
-SendClientMessage(playerid, 0xFF0000FF, "Colored message");
+SendClientMessage(playerid, 0xFF0000FF, "Coloured message");
 ```
 
 ## Support
