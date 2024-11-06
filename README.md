@@ -59,14 +59,6 @@ Access settings through the extension settings:
 ##  Example Code
 
 ```pawn
-// Hex Color Formats
-0xAC2424      // Standard hex
-0x861919AA    // Hex with alpha
-0x40533700    // Hex with zero alpha
-{8D1717}      // Curly braces format
-5F0C0C        // Plain hex
-
-// GameText Colors with Brightness Levels
 "~r~Basic Red"
 "~r~~h~Bright Red"
 "~r~~h~~h~Brighter Red"
@@ -91,11 +83,15 @@ Access settings through the extension settings:
 "~w~White Text"
 "~l~Black Text"
 
-// Practical Examples
-#define COLOUR_RED 0xFF0000FF
-#define COLOUR_GREEN_EMBED "{00FF00}"
+#define STANDARD_HEX            0xFF0000FF
+#define HEX_WITH_ALPHA          0x00FFEAFF
+#define HEX_WITH_ZERO_ALPHA     0x1100FA00
+#define CURLY_BRACES            "{FF009D}"
+#define PLAIN_HEX               0xFF00EA
+
 SendClientMessage(playerid, -1, "~r~Red ~g~Green ~b~Blue");
-SendClientMessage(playerid, 0xFF0000FF, "Coloured message");
+SendClientMessage(playerid, 0xFF0000FF, "Cool Message");
+SendClientMessage(playerid, STANDARD_HEX, "{691212}Even Cooler {10D4AA}Message");
 ```
 
 ##  Contributing
