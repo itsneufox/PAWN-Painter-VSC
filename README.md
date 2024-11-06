@@ -1,87 +1,103 @@
 # PAWN Painter
 
-PAWN Painter is a Visual Studio Code extension that enhances PAWN development with integrated color picking and preview features. It supports standard hexadecimal color formats and SA-MP/open.mp GameText color codes.
+PAWN Painter is a Visual Studio Code extension that enhances PAWN development for SA-MP and open.mp with integrated colour picking and preview features.
+It provides intuitive colour visualization and editing capabilities for various hex colour formats and GameText colour codes.
 
 ## Features
 
-- Supports multiple hex color formats:
-  - `0xRRGGBB`
-  - `0xRRGGBBAA`
-  - `{RRGGBB}`
-  - `RRGGBB`
-- Supports SA-MP/open.mp GameText colors:
+### ?? Colour Picker
+- Supports multiple hex colour formats with live preview and editing:
+  - `0xRRGGBB` - Standard hex format
+  - `0xRRGGBBAA` - Hex format with alpha channel
+  - `{RRGGBB}` - Curly brace format
+  - `RRGGBB` - Plain hex format
+
+### ?? GameText Colour Preview
+- Real-time preview of SA-MP/open.mp GameText colors:
   - Basic colors: `~r~`, `~g~`, `~b~`, `~y~`, `~p~`, `~w~`, `~l~`
-  - Brightness levels with `~h~` (e.g., `~r~~h~` for a brighter red)
+  - Multiple brightness levels using `~h~` (e.g., `~r~~h~` for brighter red)
+
+### ??? Colour Highlighting
+- Two highlighting styles for hex colors:
+  - Underline (default)
+  - Background highlight
+
+- Alpha channel handling for colours with `00` alpha value
+
+## Installation
+
+
+You can install it directly from the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=itsneufox.pawn-painter).
+
+Or search "Pawn Painter" on the Extensions tab inside Visual Studio Code.
 
 ## Usage
 
-The extension automatically activates for files with the following extensions:
+The extension automatically activates for files with these extensions:
 - `.pwn`
 - `.inc`
 - `.p`
 - `.pawno`
 
-## Configuration
+### Configuration
 
-You can configure the extension through VS Code extension settings:
-- **Toggle Normal Colour Picker** (`pawnpainter.toggleNormalColorPicker`): Enabled by default
-- **Toggle GameText Colour Picker** (`pawnpainter.toggleGameTextColorPicker`): Disabled by default but can be enabled at will
+Configure the extension in VS Code settings:
 
-## Showcase
+- `Enable Colour Picker`: Enable/disable the colour picker for hex formats
+- `Enable Hex Colour Highlight`: Enable/disable hex colour highlighting
+- `Hex Colour Highlight Style`: Choose between "underline" or "background" highlighting
+- `Enable GameText Colours`: Enable/disable GameText colour preview
 
-![Color Picking Feature](assets/showcase.gif)
-
-To test, copy this code, paste into a file and save it as a pwn file:
+## Example Code
 
 ```pawn
-//  Normal Color Formats
-0xAC2424      // Hex: 0xRRGGBB
-0x861919AA    // Hex: 0xRRGGBBAA
-0x40533700    // Hex: 0xRRGGBBAA, alpha set to 0
-{8D1717}      // Curly braces: RRGGBB
-5F0C0C        // Plain hex: RRGGBB
+// Hex Colour Formats
+0xAC2424      // Standard hex
+0x861919AA    // Hex with alpha
+0x40533700    // Hex with zero alpha
+{8D1717}      // Curly braces format
+5F0C0C        // Plain hex
 
-//  GameText Colors
-~r~Red
-~r~~h~Light Red
-~r~~h~~h~Red Pink
-~r~~h~~h~~h~Dark Pink
-~r~~h~~h~~h~~h~Light Red Pink
-~r~~h~~h~~h~~h~~h~Pink
-~g~Green
-~g~~h~Light Green
-~g~~h~~h~More Light Green
-~g~~h~~h~~h~Sea Green
-~g~~h~~h~~h~~h~Offwhite
-~b~Blue
-~b~~h~Purplish Blue
-~b~~h~~h~Light Blue
-~b~~h~~h~~h~Dark Blue
-~y~Yellow
-~y~~h~Light Yellow
-~y~~h~~h~Offwhite
-~p~Purple
-~p~~h~Medium Pink
-~w~White
-~l~Black
+// GameText Colors with Brightness Levels
+"~r~Basic Red"
+"~r~~h~Bright Red"
+"~r~~h~~h~Brighter Red"
+"~r~~h~~h~~h~Even Brighter"
+"~r~~h~~h~~h~~h~Maximum Brightness"
 
-//  Examples
-#define COLOR_RED_EMBED "{FF0000}"
-#define COLOR_RED_HEX "FF0000"
+"~g~Green"
+"~g~~h~Bright Green"
+"~g~~h~~h~Maximum Green"
 
-SendClientMessage(playerid, -1, "{FFFFFF}Hello, this is {00FF00}green {FFFFFF}and this is {FF0000}red.");
-SendClientMessage(playerid, 0xFF0000FF, "This is a cool extension!");
+"~b~Blue Text"
+"~b~~h~Light Blue"
+"~b~~h~~h~Brightest Blue"
 
-~r~This ~r~~h~is ~r~~h~~h~an ~g~example ~g~~h~of ~y~~h~~h~colorful ~p~~h~text!
+"~y~Yellow"
+"~y~~h~Bright Yellow"
+
+"~p~Purple"
+"~p~~h~Light Purple"
+
+"~w~White Text"
+"~l~Black Text"
+
+// Practical Examples
+#define COLOR_RED 0xFF0000FF
+#define COLOR_GREEN_EMBED "{00FF00}"
+
+SendClientMessage(playerid, -1, "~r~Red ~g~Green ~b~Blue");
+SendClientMessage(playerid, 0xFF0000FF, "Colored message");
 ```
 
-## Download
+## Support
 
-You can download PAWN Painter from the Visual Studio Marketplace: [Download PAWN Painter](https://marketplace.visualstudio.com/items?itemName=itsneufox.pawn-painter)
+If you encounter any issues or have suggestions:
+- File an issue on [GitHub](https://github.com/itsneufox/PAWN-Painter/issues)
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please feel free to submit a pull request.
 
 ## License
 

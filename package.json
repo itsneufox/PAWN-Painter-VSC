@@ -1,8 +1,8 @@
 {
   "name": "pawn-painter",
   "displayName": "PAWN Painter",
-  "version": "1.1.0",
-  "description": "Colour picker for open.mp",
+  "version": "1.1.1",
+  "description": "Colour picker for SA-MP and open.mp",
   "publisher": "itsneufox",
   "author": {
     "name": "itsneufox"
@@ -34,9 +34,7 @@
     "openmultiplayer",
     "samp",
     "vscode",
-    "pawn",
     "language",
-    "new",
     "sa:mp",
     "sa-mp"
   ],
@@ -64,7 +62,12 @@
       },
       {
         "command": "pawnpainter.toggleGameTextColorPicker",
-        "title": "Toggle GameText Colour Picker",
+        "title": "Toggle GameText Colour Preview",
+        "category": "PAWN Painter"
+      },
+      {
+        "command": "pawnpainter.toggleHexColorHighlight",
+        "title": "Toggle Hex Colour Highlighting",
         "category": "PAWN Painter"
       }
     ],
@@ -83,10 +86,21 @@
           "default": true,
           "description": "Enable colour picker for hex colour formats (0xRRGGBB, 0xRRGGBBAA, {RRGGBB} and RRGGBB)"
         },
+        "pawnpainter.enableHexColorHighlight": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable highlighting of hex colour codes"
+        },
+        "pawnpainter.hexColorHighlightStyle": {
+          "type": "string",
+          "enum": ["underline", "background"],
+          "default": "underline",
+          "description": "Style of hex colour highlighting (underline or background)"
+        },
         "pawnpainter.enableGameTextColors": {
           "type": "boolean",
-          "default": false,
-          "description": "Enable colour picker for GameText colour (~r~, ~g~, ~b~, etc.) with brighter colour support (~h~)"
+          "default": true,
+          "description": "Enable text preview for GameText (~r~, ~g~, ~b~, etc.) with brighter colour support (~h~)"
         }
       }
     }
