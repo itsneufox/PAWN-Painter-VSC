@@ -12,6 +12,7 @@ const gameTextColors: { [key: string]: GameTextColor } = {
     'y': { baseColor: new vscode.Color(0.77, 0.65, 0.34, 1), symbol: '~y~' },
     'p': { baseColor: new vscode.Color(0.57, 0.37, 0.85, 1), symbol: '~p~' },
     'w': { baseColor: new vscode.Color(0.77, 0.77, 0.77, 1), symbol: '~w~' },
+    's': { baseColor: new vscode.Color(0.77, 0.77, 0.77, 1), symbol: '~s~' },
     'l': { baseColor: new vscode.Color(0, 0, 0, 1), symbol: '~l~' },
 };
 
@@ -43,6 +44,9 @@ const lightenedColors: { [key: string]: vscode.Color[] } = {
     ],
     'w': [
         new vscode.Color(0.87, 0.87, 0.87, 1)
+    ],
+    's': [
+        new vscode.Color(0.87, 0.87, 0.87, 1)
     ]
 };
 
@@ -50,10 +54,9 @@ let normalColorPickerEnabled: boolean;
 let gameTextColorPickerEnabled: boolean;
 let hexColorHighlightEnabled: boolean;
 let hexColorHighlightStyle: 'underline' | 'background';
-let diagnosticCollection: vscode.DiagnosticCollection;
+let showAlphaZeroHints: boolean;
 let gameTextDecorationTypes: { [key: string]: vscode.TextEditorDecorationType } = {};
 let hexColorDecorationTypes: Map<string, vscode.TextEditorDecorationType> = new Map();
-
 function getLightenedColor(baseColor: vscode.Color, level: number): vscode.Color {
     const baseColorKey = Object.keys(gameTextColors).find(key => {
         const gameColor = gameTextColors[key];
@@ -139,7 +142,7 @@ function updateGameTextDecorations(editor: vscode.TextEditor) {
 
     const text = editor.document.getText();
     const quotedTextRegex = /"[^"]*"/g;
-    const gameTextRegex = /~([rgbwypl])~(?:~h~)*/g;
+    const gameTextRegex = /~([rgbyplws])~(?:~h~)*/g;
     const decorationsMap: { [key: string]: vscode.DecorationOptions[] } = {};
 
     let quotedMatch;
@@ -171,7 +174,7 @@ function updateGameTextDecorations(editor: vscode.TextEditor) {
             
             if (currentMatch.colorChar in gameTextColors) {
                 const absoluteStart = quotedMatch.index + currentMatch.startIndex;
-
+                
                 let colorSectionEnd;
                 if (nextMatch) {
                     colorSectionEnd = nextMatch.startIndex;
@@ -259,19 +262,40 @@ function updateHexColorDecorations(editor: vscode.TextEditor) {
 
             if (!decorationsMap.has(colorKey)) {
                 decorationsMap.set(colorKey, []);
-
+                
+                let hoverMessage;
+                if (showAlphaZeroHints && parseResult.hasZeroAlpha) {
+                    const message = new vscode.MarkdownString(
+                        "This colour has alpha value of 00.  \n" +
+                        "If it's intentional or you use bitwise operations,  \n" +
+                        "consider disregarding this message!"
+                    );
+                    message.isTrusted = true;
+                    hoverMessage = message;
+                }
+                
                 const decorationType = vscode.window.createTextEditorDecorationType({
                     ...(hexColorHighlightStyle === 'background' ? {
                         backgroundColor: colorToRGBA({ ...color, alpha: 0.3 }),
                         border: `1px solid ${colorToRGBA(color)}`
                     } : {
                         textDecoration: `none; border-bottom: 2px solid ${colorToRGBA(color)}`
-                    })
+                    }),
+                    ...(hoverMessage && { hoverMessage })
                 });
                 hexColorDecorationTypes.set(colorKey, decorationType);
             }
 
-            decorationsMap.get(colorKey)!.push({ range });
+            const decorationOptions: vscode.DecorationOptions = {
+                range,
+                hoverMessage: showAlphaZeroHints && parseResult.hasZeroAlpha ? 
+                    new vscode.MarkdownString(
+                        "This colour has alpha value of 00.  \n" +
+                        "If it's intentional or you use bitwise operations,  \n" +
+                        "consider disregarding this message!"
+                    ) : undefined
+            };
+            decorationsMap.get(colorKey)!.push(decorationOptions);
         }
     }
 
@@ -295,9 +319,7 @@ const colorProvider: vscode.DocumentColorProvider = {
             }
             return colorRanges;
         }
-
-        diagnosticCollection.set(document.uri, []);
-        const diagnostics: vscode.Diagnostic[] = [];
+        
         const text = document.getText();
         const colorRegex = /(?:0x[0-9A-Fa-f]{6,8}|\{[0-9A-Fa-f]{6}\}|\b[0-9A-Fa-f]{6}\b)/g;            
         let match;
@@ -309,23 +331,9 @@ const colorProvider: vscode.DocumentColorProvider = {
             );
             const parseResult = parseColor(colorCode);
             if (parseResult) {
-                colorRanges.push(new vscode.ColorInformation(range, parseResult.color));
-                
-                if (parseResult.hasZeroAlpha) {
-                    const diagnostic = new vscode.Diagnostic(
-                        range,
-                        "This colour has alpha value of 00.\r\n" +
-                        "This might be intentional if you plan to set\r\n" +
-                        "the alpha value later using bitwise operations.",
-                        vscode.DiagnosticSeverity.Information
-                    );
-                    diagnostics.push(diagnostic);
-                }
+                const colorInfo = new vscode.ColorInformation(range, parseResult.color);
+                colorRanges.push(colorInfo);
             }
-        }
-
-        if (diagnostics.length > 0) {
-            diagnosticCollection.set(document.uri, diagnostics);
         }
 
         return colorRanges;
@@ -359,15 +367,12 @@ const colorProvider: vscode.DocumentColorProvider = {
 
 export function activate(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration('pawnpainter');
-
     normalColorPickerEnabled = config.get('enableColorPicker', true);
     gameTextColorPickerEnabled = config.get('enableGameTextColors', false);
-
     hexColorHighlightEnabled = config.get('enableHexColorHighlight', true);
     hexColorHighlightStyle = config.get('hexColorHighlightStyle', 'underline');
+    showAlphaZeroHints = config.get('showAlphaZeroHints', true);
 
-    diagnosticCollection = vscode.languages.createDiagnosticCollection('pawnpainter');
-    context.subscriptions.push(diagnosticCollection);
     context.subscriptions.push(
         vscode.window.onDidChangeActiveTextEditor(editor => {
             if (editor) {
@@ -473,6 +478,12 @@ export function activate(context: vscode.ExtensionContext) {
                     updateHexColorDecorations(editor);
                 }
             }
+            if (e.affectsConfiguration('pawnpainter.showAlphaZeroHints')) {
+                showAlphaZeroHints = config.get('showAlphaZeroHints', true);
+                if (editor) {
+                    updateHexColorDecorations(editor);
+                }
+            }
         })
     );
 
@@ -483,10 +494,6 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-    if (diagnosticCollection) {
-        diagnosticCollection.clear();
-        diagnosticCollection.dispose();
-    }
     Object.values(gameTextDecorationTypes).forEach(decorationType => {
         decorationType.dispose();
     });
