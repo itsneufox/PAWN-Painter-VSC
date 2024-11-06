@@ -1,4 +1,4 @@
-# PAWN Painter
+# PAWN Painter - Visual Studio Code Version
 
 [![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/itsneufox.pawn-painter)](https://marketplace.visualstudio.com/items?itemName=itsneufox.pawn-painter)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
