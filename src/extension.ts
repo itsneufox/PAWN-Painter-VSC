@@ -98,12 +98,13 @@ function parseColor(colorCode: string): { color: vscode.Color, hasZeroAlpha?: bo
             const g = parseInt(hex.substr(2, 2), 16) / 255;
             const b = parseInt(hex.substr(4, 2), 16) / 255;
             return { color: new vscode.Color(r, g, b, 1) };
-        } else {
+        } else if (/^[0-9A-Fa-f]{6}$/.test(colorCode) && /[A-Fa-f]/.test(colorCode)) {
             const r = parseInt(colorCode.substr(0, 2), 16) / 255;
             const g = parseInt(colorCode.substr(2, 2), 16) / 255;
             const b = parseInt(colorCode.substr(4, 2), 16) / 255;
             return { color: new vscode.Color(r, g, b, 1) };
         }
+        return undefined;
     } catch (e) {
         return undefined;
     }
@@ -243,7 +244,7 @@ function updateHexColorDecorations(editor: vscode.TextEditor) {
     hexColorDecorationTypes.clear();
 
     const text = editor.document.getText();
-    const colorRegex = /(?:0x[0-9A-Fa-f]{6,8}|\{[0-9A-Fa-f]{6}\}|\b[0-9A-Fa-f]{6}\b)/g;
+    const colorRegex = /(?:0x[0-9A-Fa-f]{6,8}|\{[0-9A-Fa-f]{6}\}|(?=.*[A-Fa-f])[0-9A-Fa-f]{6})/g;
     const decorationsMap = new Map<string, vscode.DecorationOptions[]>();
 
     let match;
