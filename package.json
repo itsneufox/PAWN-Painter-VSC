@@ -1,8 +1,8 @@
 {
   "name": "pawn-painter",
   "displayName": "PAWN Painter",
-  "version": "1.1.4",
-  "description": "Colour picker for SA-MP and open.mp",
+  "version": "1.1.5",
+  "description": "Colour picker for open.mp and SA-MP",
   "publisher": "itsneufox",
   "author": {
     "name": "itsneufox"
