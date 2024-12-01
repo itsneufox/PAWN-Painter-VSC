@@ -5,6 +5,44 @@ interface GameTextColor {
     symbol: string;
 }
 
+interface ExtensionConfig {
+    general: {
+        enableColorPicker: boolean;
+    };
+    hex: {
+        enabled: boolean;
+        style: 'text' | 'underline' | 'background';
+        showAlphaWarnings: boolean;
+    };
+    gameText: {
+        enabled: boolean;
+        style: 'text' | 'underline' | 'background';
+    };
+    inlineText: {
+        enabled: boolean;
+        style: 'text' | 'underline' | 'background';
+    };
+}
+
+let config: ExtensionConfig = {
+    general: {
+        enableColorPicker: true
+    },
+    hex: {
+        enabled: true,
+        style: 'underline',
+        showAlphaWarnings: true
+    },
+    gameText: {
+        enabled: true,
+        style: 'text'
+    },
+    inlineText: {
+        enabled: true,
+        style: 'text'
+    }
+};
+
 const gameTextColors: { [key: string]: GameTextColor } = {
     'r': { baseColor: new vscode.Color(0.61, 0.09, 0.10, 1), symbol: '~r~' },
     'g': { baseColor: new vscode.Color(0.18, 0.35, 0.15, 1), symbol: '~g~' },
@@ -46,13 +84,25 @@ const lightenedColors: { [key: string]: vscode.Color[] } = {
     's': [new vscode.Color(0.87, 0.87, 0.87, 1)]
 };
 
-let normalColorPickerEnabled: boolean;
-let gameTextColorPickerEnabled: boolean;
-let hexColorHighlightEnabled: boolean;
-let hexColorHighlightStyle: 'underline' | 'background';
-let showAlphaZeroHints: boolean;
 let gameTextDecorationTypes: { [key: string]: vscode.TextEditorDecorationType } = {};
 let hexColorDecorationTypes: Map<string, vscode.TextEditorDecorationType> = new Map();
+let inlineColorDecorationTypes: Map<string, vscode.TextEditorDecorationType> = new Map();
+
+function loadConfiguration() {
+    const vsConfig = vscode.workspace.getConfiguration('pawnpainter');
+    
+    config.general.enableColorPicker = vsConfig.get('general.enableColorPicker', true);
+    
+    config.hex.enabled = vsConfig.get('hex.enabled', true);
+    config.hex.style = vsConfig.get('hex.style', 'underline');
+    config.hex.showAlphaWarnings = vsConfig.get('hex.showAlphaWarnings', true);
+    
+    config.gameText.enabled = vsConfig.get('gameText.enabled', true);
+    config.gameText.style = vsConfig.get('gameText.style', 'text');
+    
+    config.inlineText.enabled = vsConfig.get('inlineText.enabled', true);
+    config.inlineText.style = vsConfig.get('inlineText.style', 'text');
+}
 
 function getLightenedColor(baseColor: vscode.Color, level: number): vscode.Color {
     const baseColorKey = Object.keys(gameTextColors).find(key => {
@@ -71,23 +121,23 @@ function getLightenedColor(baseColor: vscode.Color, level: number): vscode.Color
     return (level > 0 && level - 1 < colorArray.length) ? colorArray[level - 1] : baseColor;
 }
 
-function rgbToHex(r: number, g: number, b: number): string {
-    const toHex = (n: number) => Math.min(255, Math.max(0, n)).toString(16).padStart(2, '0').toUpperCase();
-    return `0x${toHex(r)}${toHex(g)}${toHex(b)}`;
+function componentToHex(c: number): string {
+    const hex = Math.round(c * 255).toString(16).toUpperCase();
+    return hex.length === 1 ? '0' + hex : hex;
 }
 
 function colorToHexWithoutAlpha(color: vscode.Color): string {
-    const r = Math.round(color.red * 255).toString(16).padStart(2, "0").toUpperCase();
-    const g = Math.round(color.green * 255).toString(16).padStart(2, "0").toUpperCase();
-    const b = Math.round(color.blue * 255).toString(16).padStart(2, "0").toUpperCase();
+    const r = componentToHex(color.red);
+    const g = componentToHex(color.green);
+    const b = componentToHex(color.blue);
     return `#${r}${g}${b}`;
 }
 
 function colorToHexWithAlpha(color: vscode.Color): string {
-    const r = Math.round(color.red * 255).toString(16).padStart(2, "0").toUpperCase();
-    const g = Math.round(color.green * 255).toString(16).padStart(2, "0").toUpperCase();
-    const b = Math.round(color.blue * 255).toString(16).padStart(2, "0").toUpperCase();
-    const a = Math.round(color.alpha * 255).toString(16).padStart(2, "0").toUpperCase();
+    const r = componentToHex(color.red);
+    const g = componentToHex(color.green);
+    const b = componentToHex(color.blue);
+    const a = componentToHex(color.alpha);
     return `#${r}${g}${b}${a}`;
 }
 
@@ -101,7 +151,7 @@ function colorToRGBA(color: vscode.Color): string {
 
 function parseColor(colorCode: string, context?: { functionName?: string }): { color: vscode.Color, hasZeroAlpha?: boolean } | undefined {
     try {
-        if (context?.functionName?.match(/(?:Player)?TextDraw(?:Color|Colour)/)) {
+                if (context?.functionName?.match(/(?:Player)?TextDraw(?:Color|Colour)/)) {
             const rgbMatch = colorCode.match(/^(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})$/);
             if (rgbMatch) {
                 const [_, r, g, b] = rgbMatch;
@@ -115,7 +165,7 @@ function parseColor(colorCode: string, context?: { functionName?: string }): { c
             }
         }
 
-        if (colorCode.startsWith("0x")) {
+                if (colorCode.startsWith("0x")) {
             const hex = colorCode.slice(2);
             const r = parseInt(hex.substr(0, 2), 16) / 255;
             const g = parseInt(hex.substr(2, 2), 16) / 255;
@@ -124,32 +174,75 @@ function parseColor(colorCode: string, context?: { functionName?: string }): { c
             
             const hasZeroAlpha = hex.length > 6 && hex.substr(6, 2).toLowerCase() === '00';
             if (hasZeroAlpha) {
-                a = 1;
-            }
+                a = 1;             }
             
             return {
                 color: new vscode.Color(r, g, b, a),
                 hasZeroAlpha
             };
-        } else if (colorCode.startsWith("{") && colorCode.endsWith("}")) {
+        } 
+                else if (colorCode.startsWith("{") && colorCode.endsWith("}")) {
             const hex = colorCode.slice(1, -1);
             const r = parseInt(hex.substr(0, 2), 16) / 255;
             const g = parseInt(hex.substr(2, 2), 16) / 255;
             const b = parseInt(hex.substr(4, 2), 16) / 255;
             return { color: new vscode.Color(r, g, b, 1) };
         }
+
+                const rgbMatch = colorCode.match(/(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*(\d{1,3}))?/);
+        if (rgbMatch) {
+            const [_, r, g, b, a] = rgbMatch;
+            return {
+                color: new vscode.Color(
+                    parseInt(r) / 255,
+                    parseInt(g) / 255,
+                    parseInt(b) / 255,
+                    a ? parseInt(a) / 255 : 1
+                )
+            };
+        }
+
         return undefined;
     } catch (e) {
         return undefined;
     }
 }
+
+function createDecorationFromStyle(color: vscode.Color, style: 'text' | 'underline' | 'background'): vscode.DecorationRenderOptions {
+    switch (style) {
+        case 'text':
+            return {
+                color: colorToRGBA(color),
+                rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
+            };
+        case 'underline':
+            return {
+                textDecoration: `none; border-bottom: 2px solid ${colorToRGBA(color)}`
+            };
+        case 'background':
+            return {
+                backgroundColor: colorToRGBA({ ...color, alpha: 0.3 }),
+                border: `1px solid ${colorToRGBA(color)}`
+            };
+    }
+}
+
+function disposeGameTextDecorations() {
+    Object.values(gameTextDecorationTypes).forEach(decorationType => {
+        decorationType.dispose();
+    });
+    gameTextDecorationTypes = {};
+}
+
 function updateGameTextDecorations(editor: vscode.TextEditor) {
-    if (!gameTextColorPickerEnabled || !editor) {
+    if (!config.gameText.enabled || !editor) {
         Object.values(gameTextDecorationTypes).forEach(decorationType => {
             editor.setDecorations(decorationType, []);
         });
         return;
     }
+
+        disposeGameTextDecorations();
 
     const text = editor.document.getText();
     const quotedTextRegex = /"[^"]*"/g;
@@ -203,29 +296,27 @@ function updateGameTextDecorations(editor: vscode.TextEditor) {
         }
     }
 
-    Object.entries(gameTextColors).forEach(([key, color]) => {
+        Object.entries(gameTextColors).forEach(([key, color]) => {
         const baseDecorationKey = `${key}_0`;
         if (!gameTextDecorationTypes[baseDecorationKey]) {
-            gameTextDecorationTypes[baseDecorationKey] = vscode.window.createTextEditorDecorationType({
-                color: colorToRGBA(color.baseColor),
-                rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
-            });
+            gameTextDecorationTypes[baseDecorationKey] = vscode.window.createTextEditorDecorationType(
+                createDecorationFromStyle(color.baseColor, config.gameText.style)
+            );
         }
 
         if (key in lightenedColors) {
             lightenedColors[key].forEach((lightenedColor, index) => {
                 const lightDecorationKey = `${key}_${index + 1}`;
                 if (!gameTextDecorationTypes[lightDecorationKey]) {
-                    gameTextDecorationTypes[lightDecorationKey] = vscode.window.createTextEditorDecorationType({
-                        color: colorToRGBA(lightenedColor),
-                        rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
-                    });
+                    gameTextDecorationTypes[lightDecorationKey] = vscode.window.createTextEditorDecorationType(
+                        createDecorationFromStyle(lightenedColor, config.gameText.style)
+                    );
                 }
             });
         }
     });
 
-    Object.entries(decorationsMap).forEach(([decorationKey, decorations]) => {
+        Object.entries(decorationsMap).forEach(([decorationKey, decorations]) => {
         if (gameTextDecorationTypes[decorationKey]) {
             editor.setDecorations(gameTextDecorationTypes[decorationKey], decorations);
         }
@@ -233,14 +324,17 @@ function updateGameTextDecorations(editor: vscode.TextEditor) {
 }
 
 function updateHexColorDecorations(editor: vscode.TextEditor) {
-    if (!hexColorHighlightEnabled || !editor) {
+    if (!config.hex.enabled || !editor) {
         hexColorDecorationTypes.forEach(decoration => {
             editor.setDecorations(decoration, []);
+            decoration.dispose();
         });
+        hexColorDecorationTypes.clear();
         return;
     }
 
     hexColorDecorationTypes.forEach(decoration => {
+        editor.setDecorations(decoration, []);
         decoration.dispose();
     });
     hexColorDecorationTypes.clear();
@@ -248,83 +342,31 @@ function updateHexColorDecorations(editor: vscode.TextEditor) {
     const text = editor.document.getText();
     const decorationsMap = new Map<string, vscode.DecorationOptions[]>();
 
-    const functionRegex = /(?:Player)?TextDraw(?:Color|Colour)\s*\(\s*[^,]+,\s*[^,]+,\s*(\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3})\s*\)/g;
-    let functionMatch;
-    while ((functionMatch = functionRegex.exec(text)) !== null) {
-        const rgbValue = functionMatch[1];
-        const parseResult = parseColor(rgbValue, { functionName: 'PlayerTextDrawColor' });
-        
-        if (parseResult) {
-            const startPos = functionMatch.index + functionMatch[0].indexOf(rgbValue);
-            const range = new vscode.Range(
-                editor.document.positionAt(startPos),
-                editor.document.positionAt(startPos + rgbValue.length)
-            );
-
-            const color = parseResult.color;
-            const colorKey = colorToHexWithAlpha(color);
-
-            if (!decorationsMap.has(colorKey)) {
-                decorationsMap.set(colorKey, []);
-                const decorationType = vscode.window.createTextEditorDecorationType({
-                    ...(hexColorHighlightStyle === 'background' ? {
-                        backgroundColor: colorToRGBA({ ...color, alpha: 0.3 }),
-                        border: `1px solid ${colorToRGBA(color)}`
-                    } : {
-                        textDecoration: `none; border-bottom: 2px solid ${colorToRGBA(color)}`
-                    })
-                });
-                hexColorDecorationTypes.set(colorKey, decorationType);
-            }
-
-            decorationsMap.get(colorKey)!.push({ range });
-        }
-    }
-
-    const hexColorRegex = /(?:0x[0-9A-Fa-f]{6,8}|\{[0-9A-Fa-f]{6}\})/g;
+        const hexRegex = /\b0x[0-9A-Fa-f]{6,8}\b/g;
     let hexMatch;
-    while ((hexMatch = hexColorRegex.exec(text)) !== null) {
+    while ((hexMatch = hexRegex.exec(text)) !== null) {
         const colorCode = hexMatch[0];
-        const parseResult = parseColor(colorCode);
+        const range = new vscode.Range(
+            editor.document.positionAt(hexMatch.index),
+            editor.document.positionAt(hexMatch.index + colorCode.length)
+        );
         
+        const parseResult = parseColor(colorCode);
         if (parseResult) {
-            const range = new vscode.Range(
-                editor.document.positionAt(hexMatch.index),
-                editor.document.positionAt(hexMatch.index + colorCode.length)
-            );
-
             const color = parseResult.color;
             const colorKey = colorToHexWithAlpha(color);
 
             if (!decorationsMap.has(colorKey)) {
                 decorationsMap.set(colorKey, []);
-                
-                let hoverMessage;
-                if (showAlphaZeroHints && parseResult.hasZeroAlpha) {
-                    const message = new vscode.MarkdownString(
-                        "This colour has alpha value of 00.  \n" +
-                        "If it's intentional or you use bitwise operations,  \n" +
-                        "consider disregarding this message!"
-                    );
-                    message.isTrusted = true;
-                    hoverMessage = message;
-                }
-                
                 const decorationType = vscode.window.createTextEditorDecorationType({
-                    ...(hexColorHighlightStyle === 'background' ? {
-                        backgroundColor: colorToRGBA({ ...color, alpha: 0.3 }),
-                        border: `1px solid ${colorToRGBA(color)}`
-                    } : {
-                        textDecoration: `none; border-bottom: 2px solid ${colorToRGBA(color)}`
-                    }),
-                    ...(hoverMessage && { hoverMessage })
+                    ...createDecorationFromStyle(color, config.hex.style)
                 });
                 hexColorDecorationTypes.set(colorKey, decorationType);
             }
 
             decorationsMap.get(colorKey)!.push({
                 range,
-                hoverMessage: showAlphaZeroHints && parseResult.hasZeroAlpha ? 
+                hoverMessage: config.hex.showAlphaWarnings && parseResult.hasZeroAlpha ? 
                     new vscode.MarkdownString(
                         "This colour has alpha value of 00.  \n" +
                         "If it's intentional or you use bitwise operations,  \n" +
@@ -334,7 +376,65 @@ function updateHexColorDecorations(editor: vscode.TextEditor) {
         }
     }
 
-    decorationsMap.forEach((ranges, colorKey) => {
+        const bracedRegex = /\{[0-9A-Fa-f]{6}\}/g;
+    let bracedMatch;
+    while ((bracedMatch = bracedRegex.exec(text)) !== null) {
+        const colorCode = bracedMatch[0];
+        const range = new vscode.Range(
+            editor.document.positionAt(bracedMatch.index),
+            editor.document.positionAt(bracedMatch.index + colorCode.length)
+        );
+        
+        const parseResult = parseColor(colorCode);
+        if (parseResult) {
+            const color = parseResult.color;
+            const colorKey = colorToHexWithAlpha(color);
+
+            if (!decorationsMap.has(colorKey)) {
+                decorationsMap.set(colorKey, []);
+                const decorationType = vscode.window.createTextEditorDecorationType({
+                    ...createDecorationFromStyle(color, config.hex.style)
+                });
+                hexColorDecorationTypes.set(colorKey, decorationType);
+            }
+
+            decorationsMap.get(colorKey)!.push({ range });
+        }
+    }
+
+        const rgbRegex = /\b(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*(\d{1,3}))?\b/g;
+    let rgbMatch;
+    while ((rgbMatch = rgbRegex.exec(text)) !== null) {
+        const [full, r, g, b, a] = rgbMatch;
+        
+                if (parseInt(r) <= 255 && parseInt(g) <= 255 && parseInt(b) <= 255 && (!a || parseInt(a) <= 255)) {
+            const range = new vscode.Range(
+                editor.document.positionAt(rgbMatch.index),
+                editor.document.positionAt(rgbMatch.index + full.length)
+            );
+
+            const color = new vscode.Color(
+                parseInt(r) / 255,
+                parseInt(g) / 255,
+                parseInt(b) / 255,
+                a ? parseInt(a) / 255 : 1
+            );
+
+            const colorKey = colorToHexWithAlpha(color);
+
+            if (!decorationsMap.has(colorKey)) {
+                decorationsMap.set(colorKey, []);
+                const decorationType = vscode.window.createTextEditorDecorationType({
+                    ...createDecorationFromStyle(color, config.hex.style)
+                });
+                hexColorDecorationTypes.set(colorKey, decorationType);
+            }
+
+            decorationsMap.get(colorKey)!.push({ range });
+        }
+    }
+
+        decorationsMap.forEach((ranges, colorKey) => {
         const decorationType = hexColorDecorationTypes.get(colorKey);
         if (decorationType) {
             editor.setDecorations(decorationType, ranges);
@@ -342,81 +442,77 @@ function updateHexColorDecorations(editor: vscode.TextEditor) {
     });
 }
 
-class RGBToHexActionProvider implements vscode.CodeActionProvider {
-    public static readonly providedCodeActionKinds = [
-        vscode.CodeActionKind.RefactorRewrite
-    ];
+function updateInlineColorDecorations(editor: vscode.TextEditor) {
+    if (!config.inlineText.enabled || !editor) {
+        inlineColorDecorationTypes.forEach(decoration => {
+            editor.setDecorations(decoration, []);
+            decoration.dispose();
+        });
+        inlineColorDecorationTypes.clear();
+        return;
+    }
 
-    public provideCodeActions(
-        document: vscode.TextDocument,
-        range: vscode.Range | vscode.Selection,
+    inlineColorDecorationTypes.forEach(decoration => {
+        editor.setDecorations(decoration, []);
+        decoration.dispose();
+    });
+    inlineColorDecorationTypes.clear();
 
-    ): vscode.CodeAction[] | undefined {
-        const lineText = document.lineAt(range.start.line).text;
-        
-        const functionRegex = /(?:Player)?TextDraw(?:Color|Colour)\s*\(\s*[^,]+,\s*[^,]+,\s*(\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3})\s*\)/g;
-        let functionMatch;
-        const actions: vscode.CodeAction[] = [];
+    const text = editor.document.getText();
+    const decorationsMap = new Map<string, vscode.DecorationOptions[]>();
 
-        while ((functionMatch = functionRegex.exec(lineText)) !== null) {
-            const rgbPart = functionMatch[1];
-            const fullMatch = functionMatch[0];
-            
-            const fullMatchStart = functionMatch.index;
-            const rgbStartIndex = lineText.indexOf(rgbPart, fullMatchStart);
-            
-            if (rgbStartIndex === -1) continue;
+        const quotedTextRegex = /"[^"]*"/g;
+    let quotedMatch;
 
-            const rgbRange = new vscode.Range(
-                new vscode.Position(range.start.line, rgbStartIndex),
-                new vscode.Position(range.start.line, rgbStartIndex + rgbPart.length)
+    while ((quotedMatch = quotedTextRegex.exec(text)) !== null) {
+        const quotedContent = quotedMatch[0];
+        const colorTagRegex = /\{([0-9A-Fa-f]{6})\}(.*?)(?=\{[0-9A-Fa-f]{6}\}|")/g;
+        let colorMatch;
+
+        while ((colorMatch = colorTagRegex.exec(quotedContent)) !== null) {
+            const [_, colorCode, coloredText] = colorMatch;
+            if (!coloredText.trim()) continue;
+
+            const color = parseColor(`{${colorCode}}`);
+            if (!color) continue;
+
+            const startPos = quotedMatch.index + colorMatch.index + colorMatch[1].length + 2;             const range = new vscode.Range(
+                editor.document.positionAt(startPos),
+                editor.document.positionAt(startPos + coloredText.length)
             );
 
-            if (!rgbRange.contains(range) && !range.contains(rgbRange) && 
-                !range.intersection(rgbRange)) {
-                continue;
+            const colorKey = colorToHexWithAlpha(color.color);
+
+            if (!decorationsMap.has(colorKey)) {
+                decorationsMap.set(colorKey, []);
+                const decorationType = vscode.window.createTextEditorDecorationType(
+                    createDecorationFromStyle(color.color, config.inlineText.style)
+                );
+                inlineColorDecorationTypes.set(colorKey, decorationType);
             }
 
-            const rgbMatch = rgbPart.match(/(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/);
-            if (!rgbMatch) continue;
-
-            const action = new vscode.CodeAction(
-                'Convert to hex color',
-                vscode.CodeActionKind.RefactorRewrite
-            );
-
-            const [_, r, g, b] = rgbMatch.map(n => parseInt(n.trim(), 10));
-            const hexColor = this.rgbToHex(r, g, b);
-
-            const edit = new vscode.WorkspaceEdit();
-            edit.replace(document.uri, rgbRange, hexColor);
-            action.edit = edit;
-
-            actions.push(action);
+            decorationsMap.get(colorKey)!.push({ range });
         }
-
-        return actions;
     }
 
-    private rgbToHex(r: number, g: number, b: number): string {
-        const toHex = (n: number) => Math.min(255, Math.max(0, n))
-            .toString(16)
-            .padStart(2, '0')
-            .toUpperCase();
-        return `0x${toHex(r)}${toHex(g)}${toHex(b)}`;
-    }
+        decorationsMap.forEach((ranges, colorKey) => {
+        const decorationType = inlineColorDecorationTypes.get(colorKey);
+        if (decorationType) {
+            editor.setDecorations(decorationType, ranges);
+        }
+    });
 }
 
 const colorProvider: vscode.DocumentColorProvider = {
     provideDocumentColors(document) {
-        if (!normalColorPickerEnabled) return [];
+        if (!config.general.enableColorPicker) return [];
         
         const colorRanges: vscode.ColorInformation[] = [];
         const text = document.getText();
 
-        const colorRegex = /(?:0x[0-9A-Fa-f]{6,8}|\{[0-9A-Fa-f]{6}\})/g;            
+                const hexRegex = /(?:0x[0-9A-Fa-f]{6,8}|\{[0-9A-Fa-f]{6}\})/g;            
         let match;
-        while ((match = colorRegex.exec(text)) !== null) {
+        while ((match = hexRegex.exec(text)) !== null) {
             const colorCode = match[0];
             const range = new vscode.Range(
                 document.positionAt(match.index),
@@ -428,18 +524,23 @@ const colorProvider: vscode.DocumentColorProvider = {
             }
         }
 
-        const functionRegex = /(?:Player)?TextDraw(?:Color|Colour)\s*\(\s*[^,]+,\s*[^,]+,\s*(\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3})\s*\)/g;
-        let functionMatch;
-        while ((functionMatch = functionRegex.exec(text)) !== null) {
-            const rgbValue = functionMatch[1];
-            const startPos = functionMatch.index + functionMatch[0].indexOf(rgbValue);
-            const range = new vscode.Range(
-                document.positionAt(startPos),
-                document.positionAt(startPos + rgbValue.length)
-            );
-            const parseResult = parseColor(rgbValue, { functionName: 'PlayerTextDrawColor' });
-            if (parseResult) {
-                colorRanges.push(new vscode.ColorInformation(range, parseResult.color));
+                const rgbRegex = /\b(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*(\d{1,3}))?\b/g;
+        let rgbMatch;
+        while ((rgbMatch = rgbRegex.exec(text)) !== null) {
+            const [full, r, g, b, a] = rgbMatch;
+            if (parseInt(r) <= 255 && parseInt(g) <= 255 && parseInt(b) <= 255 && (!a || parseInt(a) <= 255)) {
+                const startPos = rgbMatch.index;
+                const range = new vscode.Range(
+                    document.positionAt(startPos),
+                    document.positionAt(startPos + full.length)
+                );
+                const color = new vscode.Color(
+                    parseInt(r) / 255,
+                    parseInt(g) / 255,
+                    parseInt(b) / 255,
+                    a ? parseInt(a) / 255 : 1
+                );
+                colorRanges.push(new vscode.ColorInformation(range, color));
             }
         }
 
@@ -447,33 +548,49 @@ const colorProvider: vscode.DocumentColorProvider = {
     },
 
     provideColorPresentations(color, context) {
-        if (!normalColorPickerEnabled) return [];
+        if (!config.general.enableColorPicker) return [];
 
         const originalText = context.document.getText(context.range).trim();
-        
-        const lineText = context.document.lineAt(context.range.start.line).text;
-        if (lineText.match(/(?:Player)?TextDraw(?:Color|Colour)/)) {
+        const presentations: vscode.ColorPresentation[] = [];
+
+                if (originalText.includes(',')) {
             const r = Math.round(color.red * 255);
             const g = Math.round(color.green * 255);
             const b = Math.round(color.blue * 255);
-            return [new vscode.ColorPresentation(`${r}, ${g}, ${b}`)];
+            if (originalText.split(',').length > 3) {
+                const a = Math.round(color.alpha * 255);
+                presentations.push(new vscode.ColorPresentation(`${r}, ${g}, ${b}, ${a}`));
+            } else {
+                presentations.push(new vscode.ColorPresentation(`${r}, ${g}, ${b}`));
+            }
+            return presentations;
         }
 
-        if (originalText.startsWith("{") && originalText.endsWith("}")) {
-            const colorHex = colorToHexWithoutAlpha(color);
-            return [new vscode.ColorPresentation(`{${colorHex.slice(1)}}`)]
-        } else if (originalText.startsWith("0x")) {
-            const hasAlpha = originalText.length === 10;
-            if (hasAlpha && originalText.slice(-2).toLowerCase() === '00') {
-                const colorHex = colorToHexWithoutAlpha(color);
-                return [new vscode.ColorPresentation(`0x${colorHex.slice(1)}00`)]
-            } else if (hasAlpha) {
-                return [new vscode.ColorPresentation(`0x${colorToHexWithAlpha(color).slice(1)}`)]
-            } else {
-                return [new vscode.ColorPresentation(`0x${colorToHexWithoutAlpha(color).slice(1)}`)]
-            }
+                if (originalText.startsWith('{') && originalText.endsWith('}')) {
+            const hexColor = colorToHexWithoutAlpha(color).slice(1);             presentations.push(new vscode.ColorPresentation(`{${hexColor}}`));
+            return presentations;
         }
-        return [];
+
+                if (originalText.startsWith('0x')) {
+            const hasAlpha = originalText.length === 10;             if (hasAlpha) {
+                                const originalAlpha = originalText.slice(-2);
+                if (originalAlpha.toLowerCase() === '00') {
+                    const baseHex = colorToHexWithoutAlpha(color).slice(1);
+                    presentations.push(new vscode.ColorPresentation(`0x${baseHex}00`));
+                } else {
+                    const fullHex = colorToHexWithAlpha(color).slice(1);
+                    presentations.push(new vscode.ColorPresentation(`0x${fullHex}`));
+                }
+            } else {
+                const baseHex = colorToHexWithoutAlpha(color).slice(1);
+                presentations.push(new vscode.ColorPresentation(`0x${baseHex}`));
+            }
+            return presentations;
+        }
+
+                const baseHex = colorToHexWithoutAlpha(color).slice(1);
+        presentations.push(new vscode.ColorPresentation(`0x${baseHex}`));
+        return presentations;
     }
 };
 
@@ -486,101 +603,107 @@ export function activate(context: vscode.ExtensionContext) {
         context.globalState.update('pawnpainter.lastVersion', currentVersion);
     }
 
-    const config = vscode.workspace.getConfiguration('pawnpainter');
-    normalColorPickerEnabled = config.get('enableColorPicker', true);
-    gameTextColorPickerEnabled = config.get('enableGameTextColors', true);
-    hexColorHighlightEnabled = config.get('enableHexColorHighlight', true);
-    hexColorHighlightStyle = config.get('hexColorHighlightStyle', 'underline');
-    showAlphaZeroHints = config.get('showAlphaZeroHints', true);
+        loadConfiguration();
 
-    context.subscriptions.push(
+        context.subscriptions.push(
         vscode.window.onDidChangeActiveTextEditor(editor => {
             if (editor) {
                 updateGameTextDecorations(editor);
                 updateHexColorDecorations(editor);
+                updateInlineColorDecorations(editor);
             }
         }),
 
         vscode.workspace.onDidChangeTextDocument(event => {
-            if (event.document === vscode.window.activeTextEditor?.document) {
-                const editor = vscode.window.activeTextEditor;
+            const editor = vscode.window.activeTextEditor;
+            if (editor && event.document === editor.document) {
                 updateGameTextDecorations(editor);
                 updateHexColorDecorations(editor);
+                updateInlineColorDecorations(editor);
             }
         }),
 
+        vscode.workspace.onDidChangeConfiguration(e => {
+            if ([
+                'general.enableColorPicker',
+                'hex.enabled',
+                'hex.style',
+                'hex.showAlphaWarnings',
+                'gameText.enabled',
+                'gameText.style',
+                'inlineText.enabled',
+                'inlineText.style'
+            ].some(setting => e.affectsConfiguration(`pawnpainter.${setting}`))) {
+                loadConfiguration();
+                
+                const editor = vscode.window.activeTextEditor;
+                if (editor) {
+                    updateGameTextDecorations(editor);
+                    updateHexColorDecorations(editor);
+                    updateInlineColorDecorations(editor);
+                }
+            }
+        })
+    );
+
+        context.subscriptions.push(
         vscode.languages.registerColorProvider(
             { language: "pawn", scheme: "file" },
             colorProvider
         ),
-
-        vscode.languages.registerCodeActionsProvider('pawn', new RGBToHexActionProvider(), {
-            providedCodeActionKinds: RGBToHexActionProvider.providedCodeActionKinds
-        })
     );
 
-    context.subscriptions.push(
+        context.subscriptions.push(
         vscode.commands.registerCommand("pawnpainter.toggleHexColorHighlight", async () => {
-            hexColorHighlightEnabled = !config.get('enableHexColorHighlight', true);
-            await config.update('enableHexColorHighlight', hexColorHighlightEnabled, vscode.ConfigurationTarget.Global);
+            const vsConfig = vscode.workspace.getConfiguration('pawnpainter');
+            config.hex.enabled = !config.hex.enabled;
+            await vsConfig.update('hex.enabled', config.hex.enabled, vscode.ConfigurationTarget.Global);
             if (vscode.window.activeTextEditor) {
                 updateHexColorDecorations(vscode.window.activeTextEditor);
             }
             vscode.window.showInformationMessage(
-                `Hex Colour Highlighting ${hexColorHighlightEnabled ? 'enabled' : 'disabled'}`
+                `Hex Colour Highlighting ${config.hex.enabled ? 'enabled' : 'disabled'}`
+            );
+        }),
+
+        vscode.commands.registerCommand("pawnpainter.toggleInlineColors", async () => {
+            const vsConfig = vscode.workspace.getConfiguration('pawnpainter');
+            config.inlineText.enabled = !config.inlineText.enabled;
+            await vsConfig.update('inlineText.enabled', config.inlineText.enabled, vscode.ConfigurationTarget.Global);
+            if (vscode.window.activeTextEditor) {
+                updateInlineColorDecorations(vscode.window.activeTextEditor);
+            }
+            vscode.window.showInformationMessage(
+                `Inline Colour Highlighting ${config.inlineText.enabled ? 'enabled' : 'disabled'}`
             );
         }),
 
         vscode.commands.registerCommand("pawnpainter.toggleGameTextColorPicker", async () => {
-            gameTextColorPickerEnabled = !config.get('enableGameTextColors', true);
-            await config.update('enableGameTextColors', gameTextColorPickerEnabled, vscode.ConfigurationTarget.Global);
+            const vsConfig = vscode.workspace.getConfiguration('pawnpainter');
+            config.gameText.enabled = !config.gameText.enabled;
+            await vsConfig.update('gameText.enabled', config.gameText.enabled, vscode.ConfigurationTarget.Global);
             if (vscode.window.activeTextEditor) {
                 updateGameTextDecorations(vscode.window.activeTextEditor);
             }
             vscode.window.showInformationMessage(
-                `GameText Colour Preview ${gameTextColorPickerEnabled ? 'enabled' : 'disabled'}`
+                `GameText Colour Preview ${config.gameText.enabled ? 'enabled' : 'disabled'}`
             );
         }),
 
         vscode.commands.registerCommand("pawnpainter.toggleNormalColorPicker", async () => {
-            normalColorPickerEnabled = !config.get('enableColorPicker', true);
-            await config.update('enableColorPicker', normalColorPickerEnabled, vscode.ConfigurationTarget.Global);
+            const vsConfig = vscode.workspace.getConfiguration('pawnpainter');
+            config.general.enableColorPicker = !config.general.enableColorPicker;
+            await vsConfig.update('general.enableColorPicker', config.general.enableColorPicker, vscode.ConfigurationTarget.Global);
             vscode.window.showInformationMessage(
-                `Normal Colour Picker ${normalColorPickerEnabled ? 'enabled' : 'disabled'}`
+                `Normal Colour Picker ${config.general.enableColorPicker ? 'enabled' : 'disabled'}`
             );
         })
     );
 
-    context.subscriptions.push(
-        vscode.workspace.onDidChangeConfiguration(e => {
-            const config = vscode.workspace.getConfiguration('pawnpainter');
-            const editor = vscode.window.activeTextEditor;
-            
-            if (e.affectsConfiguration('pawnpainter.enableColorPicker')) {
-                normalColorPickerEnabled = config.get('enableColorPicker', true);
-            }
-            if (e.affectsConfiguration('pawnpainter.enableGameTextColors')) {
-                gameTextColorPickerEnabled = config.get('enableGameTextColors', true);
-                if (editor) updateGameTextDecorations(editor);
-            }
-            if (e.affectsConfiguration('pawnpainter.enableHexColorHighlight')) {
-                hexColorHighlightEnabled = config.get('enableHexColorHighlight', true);
-                if (editor) updateHexColorDecorations(editor);
-            }
-            if (e.affectsConfiguration('pawnpainter.hexColorHighlightStyle')) {
-                hexColorHighlightStyle = config.get('hexColorHighlightStyle', 'underline');
-                if (editor) updateHexColorDecorations(editor);
-            }
-            if (e.affectsConfiguration('pawnpainter.showAlphaZeroHints')) {
-                showAlphaZeroHints = config.get('showAlphaZeroHints', true);
-                if (editor) updateHexColorDecorations(editor);
-            }
-        })
-    );
-
-    if (vscode.window.activeTextEditor) {
+        if (vscode.window.activeTextEditor) {
         updateGameTextDecorations(vscode.window.activeTextEditor);
         updateHexColorDecorations(vscode.window.activeTextEditor);
+        updateInlineColorDecorations(vscode.window.activeTextEditor);
     }
 }
 
@@ -589,6 +712,9 @@ export function deactivate() {
         decorationType.dispose();
     });
     hexColorDecorationTypes.forEach(decoration => {
+        decoration.dispose();
+    });
+    inlineColorDecorationTypes.forEach(decoration => {
         decoration.dispose();
     });
 }

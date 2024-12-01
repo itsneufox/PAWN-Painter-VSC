@@ -8,24 +8,29 @@ It enhances your coding experience by providing advanced color visualization and
 
 ##  Features
 
-###  Color Picker
-Integrated color picker supporting multiple hex formats:
-- `0xRRGGBB` - Standard hex format
-- `0xRRGGBBAA` - Hex format with alpha channel
-- `{RRGGBB}` - Curly brace format
-- `RRGGBB` - Plain hex format
+### Color Visualization
+Support for multiple color formats:
+- Hex format: `0xRRGGBB` and `0xRRGGBBAA`
+- Braced format: `{RRGGBB}`
+- RGB format: `r, g, b`
+- RGBA format: `r, g, b, a`
 
-###  GameText Color Preview
+### GameText Color Preview
 Real-time preview of SA-MP/open.mp GameText colors with brightness levels:
-- Basic colors: `~r~`, `~g~`, `~b~`, `~y~`, `~p~`, `~w~`, `~l~`
-- Supports multiple brightness levels using `~h~` modifier
+- Basic colors: `~r~`, `~g~`, `~b~`, `~y~`, `~p~`, `~w~`, `~s~`, `~l~`
+- Multiple brightness levels using `~h~` modifier
+- Three styling options: text color, underline, or background highlight
 
-###  Color Highlighting
-Two distinct highlighting styles for hex colors:
-- Underline (default)
-- Background highlight
+### Flexible Styling Options
+Three distinct styling options for all color formats:
+- Text color (changes the actual text color)
+- Underline (colored line under the text)
+- Background (colored background behind the text)
 
-Special handling for colors with `00` alpha value
+### Special Features
+- Alpha channel support with warnings for `00` alpha values
+- Color picker integration for all supported formats
+- Inline color text highlighting
 
 ##  Installation
 
@@ -50,48 +55,53 @@ Access settings through the extension settings:
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| `pawnpainter.enableColorPicker` | Enable/disable color picker for hex formats | `true` |
-| `pawnpainter.enableHexColorHighlight` | Enable/disable hex color highlighting | `true` |
-| `pawnpainter.hexColorHighlightStyle` | Choose highlighting style ("underline" or "background") | `"underline"` |
-| `pawnpainter.enableGameTextColors` | Enable/disable GameText color preview | `true` |
-| `pawnpainter.showAlphaZeroHints` | Show hover hints for colors with alpha value of 00 | `true` |
+| `pawnpainter.general.enableColorPicker` | Enable/disable color picker functionality | `true` |
+| `pawnpainter.hex.enabled` | Enable/disable hex color highlighting | `true` |
+| `pawnpainter.hex.style` | Highlighting style ("text", "underline", or "background") | `"underline"` |
+| `pawnpainter.hex.showAlphaWarnings` | Show warnings for colors with alpha value of 00 | `true` |
+| `pawnpainter.gameText.enabled` | Enable/disable GameText color preview | `true` |
+| `pawnpainter.gameText.style` | GameText style ("text", "underline", or "background") | `"text"` |
+| `pawnpainter.inlineText.enabled` | Enable/disable inline color highlighting | `true` |
+| `pawnpainter.inlineText.style` | Inline text style ("text", "underline", or "background") | `"text"` |
 
 ##  Example Code
 
 ```pawn
-"~r~Basic Red"
-"~r~~h~Bright Red"
-"~r~~h~~h~Brighter Red"
-"~r~~h~~h~~h~Even Brighter"
-"~r~~h~~h~~h~~h~Maximum Brightness"
+"~r~Macaco saw a red light."
+"~r~~h~Macaco ignored it!"
+"~r~~h~~h~Macaco hit a pole."
+"~r~~h~~h~~h~Macaco blamed the banana."
+"~r~~h~~h~~h~~h~Everyone else blamed Macaco."
 
-"~g~Green"
-"~g~~h~Bright Green"
-"~g~~h~~h~Maximum Green"
+"~g~Macaco found a green banana."
+"~g~~h~Macaco waited."
+"~g~~h~~h~Still green."
 
-"~b~Blue Text"
-"~b~~h~Light Blue"
-"~b~~h~~h~Brightest Blue"
+"~b~Macaco stole a bike."
+"~b~~h~It was blue and he lost it."
+"~b~~h~~h~it was in the ocean!"
 
-"~y~Yellow"
-"~y~~h~Bright Yellow"
-"~y~~h~~h~Off White"
+"~y~Macaco bought a banana."
+"~y~~h~It was bright yellow."
+"~y~~h~~h~Off-white by noon"
+"~l~Gone by evening..."
 
-"~p~Purple"
-"~p~~h~Light Purple"
+"~p~Macaco joined a purple gang."
+"~p~~h~They gave him a light purple bike."
+"~w~White flag? Never!"
 
-"~w~White Text"
-"~l~Black Text"
+#define STANDARD_HEX            0xD49D04FF
+#define HEX_WITH_ALPHA          0xFF00FFFF
+#define HEX_WITH_ZERO_ALPHA     0x00F2FA00
+#define CURLY_BRACES            "{0066FF}"
+#define PLAIN_HEX               0x00F351
 
-#define STANDARD_HEX            0xFF0000FF
-#define HEX_WITH_ALPHA          0x00FFEAFF
-#define HEX_WITH_ZERO_ALPHA     0x1100FA00
-#define CURLY_BRACES            "{FF009D}"
-#define PLAIN_HEX               0xFF00EA
+SendClientMessage(playerid, STANDARD_HEX, "~r~~h~Macaco ~g~~h~~h~tried to hide, but ~p~~h~no one can escape the spotlight.");
 
-SendClientMessage(playerid, -1, "~r~Red ~g~Green ~b~Blue");
-SendClientMessage(playerid, 0xFF0000FF, "Cool Message");
-SendClientMessage(playerid, STANDARD_HEX, "{691212}Even Cooler {10D4AA}Message");
+SendClientMessage(playerid, 0xFF0000FF, "Macaco tried to rob a bank... only stole bananas. Still got 5 stars!");
+
+SendClientMessage(playerid, STANDARD_HEX, "{E62929}Macaco {FFFFFF}spawned, stole a {E6A829}bike{FFFFFF}, crashed into a {55E961}banana stand{FFFFFF}.");
+SendClientMessage(playerid, STANDARD_HEX, "{E62929}Macaco {FFFFFF}is now {E6A829}wanted{FFFFFF} for {E62929}armed peeling{FFFFFF}. It's bananas!!!");
 ```
 
 ##  Contributing
@@ -106,6 +116,10 @@ If you encounter any issues or have suggestions:
 ##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+##  Special Thanks
+
+ToiletDuck from [equitygaming.net](equitygaming.net)
 
 ##  Author
 

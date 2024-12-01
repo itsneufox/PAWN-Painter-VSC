@@ -1,9 +1,14 @@
 {
   "name": "pawn-painter",
   "displayName": "PAWN Painter",
-  "version": "1.1.5",
+  "version": "1.2.0",
   "description": "Colour picker for open.mp and SA-MP",
   "publisher": "itsneufox",
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#C80000",
+    "theme": "dark"
+  },
   "author": {
     "name": "itsneufox"
   },
@@ -38,11 +43,6 @@
     "sa:mp",
     "sa-mp"
   ],
-  "icon": "images/icon.png",
-  "galleryBanner": {
-    "color": "#C80000",
-    "theme": "dark"
-  },
   "main": "./out/extension.js",
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -54,58 +54,123 @@
     "onLanguage:pawn"
   ],
   "contributes": {
-    "commands": [
+    "languages": [
       {
-        "command": "pawnpainter.toggleNormalColorPicker",
-        "title": "Toggle Normal Colour Picker",
-        "category": "PAWN Painter"
-      },
+        "id": "pawn",
+        "extensions": [
+          ".pwn",
+          ".inc",
+          ".p",
+          ".pawno"
+        ],
+        "aliases": [
+          "PAWN",
+          "pawn"
+        ]
+      }
+    ],
+    "commands": [
       {
         "command": "pawnpainter.toggleHexColorHighlight",
         "title": "Toggle Hex Colour Highlighting",
         "category": "PAWN Painter"
       },
       {
+        "command": "pawnpainter.toggleInlineColors",
+        "title": "Toggle Inline Colour Highlighting",
+        "category": "PAWN Painter"
+      },
+      {
         "command": "pawnpainter.toggleGameTextColorPicker",
         "title": "Toggle GameText Colour Preview",
         "category": "PAWN Painter"
-      }
-    ],
-    "languages": [
+      },
       {
-        "id": "pawn",
-        "extensions": [".pwn", ".inc", ".p", ".pawno"],
-        "aliases": ["PAWN", "pawn"]
+        "command": "pawnpainter.toggleNormalColorPicker",
+        "title": "Toggle Normal Colour Picker",
+        "category": "PAWN Painter"
       }
     ],
     "configuration": {
       "title": "PAWN Painter",
       "properties": {
-        "pawnpainter.enableColorPicker": {
+        "pawnpainter.general.enableColorPicker": {
           "type": "boolean",
           "default": true,
-          "description": "Enable colour picker for hex colour formats (0xRRGGBB, 0xRRGGBBAA, {RRGGBB} and RRGGBB)"
+          "description": "Enable the VS Code color picker for all supported color formats. This allows you to use the built-in color picker to modify colors in your code.",
+          "order": 1
         },
-        "pawnpainter.enableHexColorHighlight": {
+        "pawnpainter.hex.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable highlighting of hex colour codes"
+          "description": "Enable highlighting for hexadecimal color codes (0xRRGGBB, 0xRRGGBBAA, {RRGGBB}).",
+          "order": 2
         },
-        "pawnpainter.hexColorHighlightStyle": {
+        "pawnpainter.hex.style": {
+        "type": "string",
+        "enum": [
+            "text",
+            "underline",
+            "background"
+        ],
+        "enumDescriptions": [
+            "Color the text directly with the specified color",
+            "Show a colored underline below the hex color code",
+            "Show a colored background behind the hex color code"
+        ],
+        "default": "underline",
+        "description": "Choose how hex color codes should be highlighted in your code",
+        "order": 3
+        },
+        "pawnpainter.hex.showAlphaWarnings": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show warning hints when a color has an alpha value of 00. This can help identify potentially unintended transparent colors.",
+          "order": 4
+        },
+        "pawnpainter.gameText.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable color preview for GameText color codes (~r~, ~g~, ~b~, etc.). Supports brightness modifiers (~h~) for enhanced colors.",
+          "order": 5
+        },
+        "pawnpainter.gameText.style": {
           "type": "string",
-          "enum": ["underline", "background"],
-          "default": "underline",
-          "description": "Style of hex colour highlighting (underline or background)"
+          "enum": [
+            "text",
+            "underline",
+            "background"
+          ],
+          "enumDescriptions": [
+            "Color the text directly with the specified color",
+            "Show a colored underline below the text",
+            "Show a colored background behind the text"
+          ],
+          "default": "text",
+          "description": "Choose how GameText colors should be displayed in your code",
+          "order": 6
         },
-        "pawnpainter.enableGameTextColors": {
+        "pawnpainter.inlineText.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable text preview for GameText (~r~, ~g~, ~b~, ~s~, etc.) with brighter colour support (~h~)"
+          "description": "Enable color highlighting for text between color tags (e.g., '{FF0000}red text, {FFFFFF}white text'). This helps visualize colored text.",
+          "order": 7
         },
-        "pawnpainter.showAlphaZeroHints": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show hover hints for colours with alpha value of 00"
+        "pawnpainter.inlineText.style": {
+          "type": "string",
+          "enum": [
+            "text",
+            "underline",
+            "background"
+          ],
+          "enumDescriptions": [
+            "Color the text directly with the specified color",
+            "Show a colored underline below the text",
+            "Show a colored background behind the text"
+          ],
+          "default": "text",
+          "description": "Choose how inline colored text should be displayed in your code",
+          "order": 8
         }
       }
     }
