@@ -242,81 +242,83 @@ function updateGameTextDecorations(editor: vscode.TextEditor) {
         return;
     }
 
-        disposeGameTextDecorations();
+    disposeGameTextDecorations();
 
     const text = editor.document.getText();
-    const quotedTextRegex = /"[^"]*"/g;
-    const gameTextRegex = /~([rgbyplws])~(?:~h~)*/g;
     const decorationsMap: { [key: string]: vscode.DecorationOptions[] } = {};
 
+    const quotedTextRegex = /"[^"]*"/g;
     let quotedMatch;
+
     while ((quotedMatch = quotedTextRegex.exec(text)) !== null) {
         const quotedContent = quotedMatch[0];
-        const matches: Array<{
-            colorChar: string,
-            lightLevels: number,
-            startIndex: number,
-            length: number
-        }> = [];
+        const absoluteStart = quotedMatch.index;
 
+        const segments = [];
+        let currentIndex = 0;
+        const gameTextRegex = /~([rgbyplws])~(?:~h~)*/g;
+        let lastMatchEnd = 0;
         let gameTextMatch;
+
         gameTextRegex.lastIndex = 0;
-        
+
         while ((gameTextMatch = gameTextRegex.exec(quotedContent)) !== null) {
-            matches.push({
-                colorChar: gameTextMatch[1],
-                lightLevels: (gameTextMatch[0].match(/~h~/g) || []).length,
-                startIndex: gameTextMatch.index,
-                length: gameTextMatch[0].length
+            if (gameTextMatch.index > lastMatchEnd) {
+                segments.push({
+                    text: quotedContent.slice(lastMatchEnd, gameTextMatch.index),
+                    startIndex: lastMatchEnd,
+                    colorChar: null,
+                    lightLevels: 0
+                });
+            }
+
+            const colorChar = gameTextMatch[1];
+            const lightLevels = (gameTextMatch[0].match(/~h~/g) || []).length;
+            
+            const nextColorMatch = gameTextRegex.exec(quotedContent);
+            const endIndex = nextColorMatch ? nextColorMatch.index : quotedContent.length - 1;
+            gameTextRegex.lastIndex = nextColorMatch ? nextColorMatch.index : quotedContent.length;
+
+            segments.push({
+                text: quotedContent.slice(gameTextMatch.index + gameTextMatch[0].length, endIndex),
+                startIndex: gameTextMatch.index + gameTextMatch[0].length,
+                colorChar,
+                lightLevels
             });
+
+            lastMatchEnd = endIndex;
+
+            if (nextColorMatch) {
+                gameTextRegex.lastIndex = nextColorMatch.index;
+            }
         }
 
-        for (let i = 0; i < matches.length; i++) {
-            const currentMatch = matches[i];
-            const nextMatch = matches[i + 1];
-            
-            if (currentMatch.colorChar in gameTextColors) {
-                const absoluteStart = quotedMatch.index + currentMatch.startIndex;
-                const colorSectionEnd = nextMatch ? nextMatch.startIndex : quotedContent.length - 1;
-                
-                const rangeStart = editor.document.positionAt(absoluteStart + currentMatch.length);
-                const rangeEnd = editor.document.positionAt(quotedMatch.index + colorSectionEnd);
+        segments.forEach(segment => {
+            if (segment.colorChar && segment.colorChar in gameTextColors && segment.text.length > 0) {
+                const rangeStart = editor.document.positionAt(absoluteStart + segment.startIndex);
+                const rangeEnd = editor.document.positionAt(absoluteStart + segment.startIndex + segment.text.length);
                 const range = new vscode.Range(rangeStart, rangeEnd);
 
-                const baseColor = gameTextColors[currentMatch.colorChar].baseColor;
-                const finalColor = getLightenedColor(baseColor, currentMatch.lightLevels);
+                const baseColor = gameTextColors[segment.colorChar].baseColor;
+                const finalColor = getLightenedColor(baseColor, segment.lightLevels);
                 
-                const decorationKey = `${currentMatch.colorChar}_${currentMatch.lightLevels}`;
+                const decorationKey = `${segment.colorChar}_${segment.lightLevels}`;
                 if (!decorationsMap[decorationKey]) {
                     decorationsMap[decorationKey] = [];
+                    
+                    if (!gameTextDecorationTypes[decorationKey]) {
+                        gameTextDecorationTypes[decorationKey] = vscode.window.createTextEditorDecorationType(
+                            createDecorationFromStyle(finalColor, config.gameText.style)
+                        );
+                    }
                 }
                 
                 decorationsMap[decorationKey].push({ range });
             }
-        }
+        });
     }
 
-        Object.entries(gameTextColors).forEach(([key, color]) => {
-        const baseDecorationKey = `${key}_0`;
-        if (!gameTextDecorationTypes[baseDecorationKey]) {
-            gameTextDecorationTypes[baseDecorationKey] = vscode.window.createTextEditorDecorationType(
-                createDecorationFromStyle(color.baseColor, config.gameText.style)
-            );
-        }
-
-        if (key in lightenedColors) {
-            lightenedColors[key].forEach((lightenedColor, index) => {
-                const lightDecorationKey = `${key}_${index + 1}`;
-                if (!gameTextDecorationTypes[lightDecorationKey]) {
-                    gameTextDecorationTypes[lightDecorationKey] = vscode.window.createTextEditorDecorationType(
-                        createDecorationFromStyle(lightenedColor, config.gameText.style)
-                    );
-                }
-            });
-        }
-    });
-
-        Object.entries(decorationsMap).forEach(([decorationKey, decorations]) => {
+    Object.entries(decorationsMap).forEach(([decorationKey, decorations]) => {
         if (gameTextDecorationTypes[decorationKey]) {
             editor.setDecorations(gameTextDecorationTypes[decorationKey], decorations);
         }
