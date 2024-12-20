@@ -832,9 +832,9 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
             <style>
                 body {
                     padding: 20px;
-                    colour: var(--vscode-foreground);
+                    color: var(--vscode-foreground);
                     font-family: var(--vscode-font-family);
-                    background-colour: var(--vscode-editor-background);
+                    background-color: var(--vscode-editor-background);
                 }
 
                 .container {
@@ -855,13 +855,13 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
                 }
 
                 .version {
-                    colour: var(--vscode-textPreformat-foreground);
+                    color: var(--vscode-textPreformat-foreground);
                     font-size: 14px;
                     margin-top: 10px;
                 }
 
                 .features h2 {
-                    colour: var(--vscode-textLink-foreground);
+                    color: var(--vscode-textLink-foreground);
                     font-size: 18px;
                     margin-bottom: 15px;
                 }
@@ -875,10 +875,10 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
                     flex-shrink: 0;
                 }
 
-                .blue { background-colour: #007acc; }
-                .green { background-colour: #28a745; }
-                .purple { background-colour: #6f42c1; }
-                .orange { background-colour: #f66a0a; }
+                .blue { background-color: #007acc; }
+                .green { background-color: #28a745; }
+                .purple { background-color: #6f42c1; }
+                .orange { background-color: #f66a0a; }
 
                 .changelog-grid {
                     display: grid;
@@ -888,14 +888,14 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
                 }
 
                 .changelog-box {
-                    background-colour: var(--vscode-editor-background);
+                    background-color: var(--vscode-editor-background);
                     border: 1px solid var(--vscode-widget-border);
                     border-radius: 6px;
                     padding: 15px;
                 }
 
                 .changelog-box h3 {
-                    colour: var(--vscode-textLink-foreground);
+                    color: var(--vscode-textLink-foreground);
                     font-size: 16px;
                     margin-bottom: 15px;
                     margin-top: 0;
@@ -920,8 +920,8 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
                 }
 
                 button {
-                    background-colour: var(--vscode-button-background);
-                    colour: var(--vscode-button-foreground);
+                    background-color: var(--vscode-button-background);
+                    color: var(--vscode-button-foreground);
                     border: none;
                     padding: 8px 16px;
                     border-radius: 4px;
@@ -930,12 +930,12 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
                 }
 
                 button:hover {
-                    background-colour: var(--vscode-button-hoverBackground);
+                    background-color: var(--vscode-button-hoverBackground);
                 }
 
                 .auto-close-text {
                     margin-top: 10px;
-                    colour: var(--vscode-descriptionForeground);
+                    color: var(--vscode-descriptionForeground);
                     font-size: 12px;
                     opacity: 0.8;
                 }
