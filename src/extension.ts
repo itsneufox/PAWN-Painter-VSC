@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 
 interface ViewportInfo {
     startLine: number;
@@ -173,8 +174,44 @@ function colorToRGBA(color: vscode.Color): string {
     return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
-function parseColor(colorCode: string, context?: { functionName?: string }): { color: vscode.Color, hasZeroAlpha?: boolean } | undefined {
+function isWithinFunctionCall(document: vscode.TextDocument, position: vscode.Position): boolean {
+    const line = document.lineAt(position.line).text;
+    const lineUntilPosition = line.substring(0, position.character);
+    
+    let openParens = 0;
+    for (const char of lineUntilPosition) {
+        if (char === '(') openParens++;
+        if (char === ')') openParens--;
+    }
+    
+    if (openParens > 0) {
+        const functionCallRegex = /\b[A-Za-z_][A-Za-z0-9_]*\s*\(/;
+        return functionCallRegex.test(lineUntilPosition);
+    }
+    
+    return false;
+}
+
+function getFunctionNameAtPosition(document: vscode.TextDocument, position: vscode.Position): string | undefined {
+    const line = document.lineAt(position.line).text;
+    const lineUntilPosition = line.substring(0, position.character);
+    
+    const functionMatch = lineUntilPosition.match(/\b([A-Za-z_][A-Za-z0-9_]*)\s*\([^(]*$/);
+    return functionMatch ? functionMatch[1] : undefined;
+}
+
+function parseColor(colorCode: string, context?: { 
+    functionName?: string, 
+    document?: vscode.TextDocument, 
+    position?: vscode.Position 
+}): { color: vscode.Color, hasZeroAlpha?: boolean } | undefined {
     try {
+        if (context?.document && context?.position && 
+            isWithinFunctionCall(context.document, context.position) &&
+            !context?.functionName?.match(/(?:Player)?TextDraw(?:Color|Colour)/)) {
+            return undefined;
+        }
+
         if (context?.functionName?.match(/(?:Player)?TextDraw(?:Color|Colour)/)) {
             const rgbMatch = colorCode.match(/^(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})$/);
             if (rgbMatch) {
@@ -205,9 +242,9 @@ function parseColor(colorCode: string, context?: { functionName?: string }): { c
                 color: new vscode.Color(r, g, b, a),
                 hasZeroAlpha
             };
-        } 
+        }
 
-        else if (colorCode.startsWith("{") && colorCode.endsWith("}")) {
+        if (colorCode.startsWith("{") && colorCode.endsWith("}")) {
             const hex = colorCode.slice(1, -1);
             const r = parseInt(hex.substr(0, 2), 16) / 255;
             const g = parseInt(hex.substr(2, 2), 16) / 255;
@@ -215,17 +252,22 @@ function parseColor(colorCode: string, context?: { functionName?: string }): { c
             return { color: new vscode.Color(r, g, b, 1) };
         }
 
-        const rgbMatch = colorCode.match(/(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*(\d{1,3}))?/);
-        if (rgbMatch) {
-            const [_, r, g, b, a] = rgbMatch;
-            return {
-                color: new vscode.Color(
-                    parseInt(r) / 255,
-                    parseInt(g) / 255,
-                    parseInt(b) / 255,
-                    a ? parseInt(a) / 255 : 1
-                )
-            };
+
+        if (!context?.document || !context?.position || !isWithinFunctionCall(context.document, context.position)) {
+            const rgbMatch = colorCode.match(/(?<![\d.])\b([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})(?:\s*,\s*([0-9]{1,3}))?\b/);
+            if (rgbMatch) {
+                const [_, r, g, b, a] = rgbMatch;
+                if (parseInt(r) <= 255 && parseInt(g) <= 255 && parseInt(b) <= 255 && (!a || parseInt(a) <= 255)) {
+                    return {
+                        color: new vscode.Color(
+                            parseInt(r) / 255,
+                            parseInt(g) / 255,
+                            parseInt(b) / 255,
+                            a ? parseInt(a) / 255 : 1
+                        )
+                    };
+                }
+            }
         }
 
         return undefined;
@@ -389,13 +431,21 @@ function updateHexColorDecorations(editor: vscode.TextEditor) {
     while ((hexMatch = hexRegex.exec(viewportText)) !== null) {
         const colorCode = hexMatch[0];
         const absolutePosition = absoluteStart + hexMatch.index;
+        const position = editor.document.positionAt(absolutePosition);
+        const functionName = getFunctionNameAtPosition(editor.document, position);
+        
         const range = new vscode.Range(
-            editor.document.positionAt(absolutePosition),
+            position,
             editor.document.positionAt(absolutePosition + colorCode.length)
         );
         
         if (isWithinViewport(range, viewport)) {
-            const parseResult = parseColor(colorCode);
+            const parseResult = parseColor(colorCode, {
+                document: editor.document,
+                position: position,
+                functionName: functionName
+            });
+            
             if (parseResult) {
                 const color = parseResult.color;
                 const colorKey = colorToHexWithAlpha(color);
@@ -450,37 +500,42 @@ function updateHexColorDecorations(editor: vscode.TextEditor) {
         }
     }
 
-    const rgbRegex = /\b(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*(\d{1,3}))?\b/g;
+    const rgbRegex = /(?<![\d.])\b([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})(?:\s*,\s*([0-9]{1,3}))?\b/g;
     let rgbMatch;
     while ((rgbMatch = rgbRegex.exec(viewportText)) !== null) {
         const [full, r, g, b, a] = rgbMatch;
         
         if (parseInt(r) <= 255 && parseInt(g) <= 255 && parseInt(b) <= 255 && (!a || parseInt(a) <= 255)) {
             const absolutePosition = absoluteStart + rgbMatch.index;
+            const position = editor.document.positionAt(absolutePosition);
+            const functionName = getFunctionNameAtPosition(editor.document, position);
+            
             const range = new vscode.Range(
-                editor.document.positionAt(absolutePosition),
+                position,
                 editor.document.positionAt(absolutePosition + full.length)
             );
 
             if (isWithinViewport(range, viewport)) {
-                const color = new vscode.Color(
-                    parseInt(r) / 255,
-                    parseInt(g) / 255,
-                    parseInt(b) / 255,
-                    a ? parseInt(a) / 255 : 1
-                );
+                const parseResult = parseColor(full, {
+                    document: editor.document,
+                    position: position,
+                    functionName: functionName
+                });
 
-                const colorKey = colorToHexWithAlpha(color);
+                if (parseResult) {
+                    const color = parseResult.color;
+                    const colorKey = colorToHexWithAlpha(color);
 
-                if (!decorationsMap.has(colorKey)) {
-                    decorationsMap.set(colorKey, []);
-                    const decorationType = vscode.window.createTextEditorDecorationType({
-                        ...createDecorationFromStyle(color, config.hex.style)
-                    });
-                    hexColorDecorationTypes.set(colorKey, decorationType);
+                    if (!decorationsMap.has(colorKey)) {
+                        decorationsMap.set(colorKey, []);
+                        const decorationType = vscode.window.createTextEditorDecorationType({
+                            ...createDecorationFromStyle(color, config.hex.style)
+                        });
+                        hexColorDecorationTypes.set(colorKey, decorationType);
+                    }
+
+                    decorationsMap.get(colorKey)!.push({ range });
                 }
-
-                decorationsMap.get(colorKey)!.push({ range });
             }
         }
     }
@@ -585,7 +640,7 @@ const colorProvider: vscode.DocumentColorProvider = {
             }
         }
 
-        const rgbRegex = /\b(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*(\d{1,3}))?\b/g;
+        const rgbRegex = /(?<![\d.])\b([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})(?:\s*,\s*([0-9]{1,3}))?\b/g;
         let rgbMatch;
         while ((rgbMatch = rgbRegex.exec(text)) !== null) {
             const [full, r, g, b, a] = rgbMatch;
@@ -657,12 +712,305 @@ const colorProvider: vscode.DocumentColorProvider = {
     }
 };
 
+function createWebviewPanel(extensionUri: vscode.Uri): vscode.WebviewPanel {
+    const panel = vscode.window.createWebviewPanel(
+        'pawnPainterSplash',
+        'PAWN Painter',
+        vscode.ViewColumn.One,
+        {
+            enableScripts: true,
+            retainContextWhenHidden: true,
+            localResourceRoots: [extensionUri]
+        }
+    );
+    
+    return panel;
+}
+
+function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version: string): string {
+    const logoPath = vscode.Uri.joinPath(extensionUri, 'images', 'repository-logo.png');
+    const logoUri = panel.asWebviewUri(logoPath);
+
+    return `<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${panel.cspSource} 'unsafe-inline'; img-src ${panel.cspSource} data:;">
+            <title>PAWN Painter</title>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <img src="${logoUri}" alt="PAWN Painter" class="logo">
+                    <p class="version">Version ${version}</p>
+                </div>
+                
+                <div class="content">
+                    <div class="features">
+                        <h2>Key Features</h2>
+                        <ul>
+                            <li>
+                                <span class="feature-dot blue"></span>
+                                Real-time color highlighting for hex codes and RGB values
+                            </li>
+                            <li>
+                                <span class="feature-dot green"></span>
+                                Gametext color previews with support for color intensities
+                            </li>
+                            <li>
+                                <span class="feature-dot purple"></span>
+                                Built-in color picker for easy color selection
+                            </li>
+                            <li>
+                                <span class="feature-dot orange"></span>
+                                Customizable highlighting styles
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="changelog-grid">
+                        <div class="changelog-box">
+                            <h3>What's New</h3>
+                            <ul>
+                                <li>
+                                    <span class="feature-dot blue"></span>
+                                    Better color detection when colors are used inside functions
+                                </li>
+                                <li>
+                                    <span class="feature-dot blue"></span>
+                                    Colors now work better in TextDraw functions
+                                </li>
+                                <li>
+                                    <span class="feature-dot blue"></span>
+                                    Fixed issues where decimal numbers were incorrectly shown as colors
+                                </li>
+                                <li>
+                                    <span class="feature-dot blue"></span>
+                                    The extension is now smarter about where it shows colors
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="changelog-box">
+                            <h3>Bug Fixes</h3>
+                            <ul>
+                                <li>
+                                    <span class="feature-dot orange"></span>
+                                    Fixed decimal numbers being highlighted as colors by mistake
+                                </li>
+                                <li>
+                                    <span class="feature-dot orange"></span>
+                                    Fixed some cases where colors weren't showing up correctly
+                                </li>
+                                <li>
+                                    <span class="feature-dot orange"></span>
+                                    Fixed alpha (transparency) values not working properly
+                                </li>
+                                <li>
+                                    <span class="feature-dot orange"></span>
+                                    Better handling of RGB color values to prevent errors
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="changelog-box">
+                            <h3>Improvements</h3>
+                            <ul>
+                                <li>
+                                    <span class="feature-dot green"></span>
+                                    Color detection is now more accurate
+                                </li>
+                                <li>
+                                    <span class="feature-dot green"></span>
+                                    Better handling of different color formats
+                                </li>
+                                <li>
+                                    <span class="feature-dot green"></span>
+                                    The extension now checks colors more carefully
+                                </li>
+                                <li>
+                                    <span class="feature-dot green"></span>
+                                    Colors work better in more situations
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <button onclick="vscode.postMessage({type: 'close'})">Let's Paint Some Code!</button>
+                    <p class="auto-close-text">or wait 30 seconds for this window to close automatically</p>
+                </div>
+            </div>
+
+            <style>
+                body {
+                    padding: 20px;
+                    color: var(--vscode-foreground);
+                    font-family: var(--vscode-font-family);
+                    background-color: var(--vscode-editor-background);
+                }
+
+                .container {
+                    max-width: 1000px;
+                    margin: 0 auto;
+                }
+
+                .header {
+                    text-align: center;
+                    margin-bottom: 30px;
+                }
+
+                .logo {
+                    width: 100%;
+                    max-width: 800px;
+                    height: auto;
+                    margin-bottom: 20px;
+                }
+
+                .version {
+                    color: var(--vscode-textPreformat-foreground);
+                    font-size: 14px;
+                    margin-top: 10px;
+                }
+
+                .features h2 {
+                    color: var(--vscode-textLink-foreground);
+                    font-size: 18px;
+                    margin-bottom: 15px;
+                }
+
+                .feature-dot {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    margin-right: 10px;
+                    margin-top: 6px;
+                    flex-shrink: 0;
+                }
+
+                .blue { background-color: #007acc; }
+                .green { background-color: #28a745; }
+                .purple { background-color: #6f42c1; }
+                .orange { background-color: #f66a0a; }
+
+                .changelog-grid {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 20px;
+                    margin-top: 30px;
+                }
+
+                .changelog-box {
+                    background-color: var(--vscode-editor-background);
+                    border: 1px solid var(--vscode-widget-border);
+                    border-radius: 6px;
+                    padding: 15px;
+                }
+
+                .changelog-box h3 {
+                    color: var(--vscode-textLink-foreground);
+                    font-size: 16px;
+                    margin-bottom: 15px;
+                    margin-top: 0;
+                }
+
+                .changelog-box ul {
+                    margin: 0;
+                    padding: 0;
+                    list-style: none;
+                }
+
+                .changelog-box li {
+                    display: flex;
+                    align-items: flex-start;
+                    margin-bottom: 12px;
+                    line-height: 1.4;
+                }
+
+                .footer {
+                    text-align: center;
+                    margin-top: 30px;
+                }
+
+                button {
+                    background-color: var(--vscode-button-background);
+                    color: var(--vscode-button-foreground);
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 14px;
+                }
+
+                button:hover {
+                    background-color: var(--vscode-button-hoverBackground);
+                }
+
+                .auto-close-text {
+                    margin-top: 10px;
+                    color: var(--vscode-descriptionForeground);
+                    font-size: 12px;
+                    opacity: 0.8;
+                }
+            </style>
+            <script>
+                const vscode = acquireVsCodeApi();
+            </script>
+        </body>
+        </html>`;
+}
+
+function showSplashScreen(context: vscode.ExtensionContext, version: string) {
+    const panel = vscode.window.createWebviewPanel(
+        'pawnPainterSplash',
+        'PAWN Painter',
+        vscode.ViewColumn.One,
+        {
+            enableScripts: true,
+            retainContextWhenHidden: true,
+            localResourceRoots: [context.extensionUri]
+        }
+    );
+
+    panel.webview.html = getWebviewHtml(panel.webview, context.extensionUri, version);
+
+    panel.webview.onDidReceiveMessage(
+        message => {
+            switch (message.type) {
+                case 'close':
+                    panel.dispose();
+                    break;
+            }
+        },
+        undefined,
+        context.subscriptions
+    );
+
+    let isDisposed = false;
+    setTimeout(() => {
+        if (!isDisposed) {
+            panel.dispose();
+        }
+    }, 30000);
+
+    panel.onDidDispose(() => {
+        isDisposed = true;
+    }, null, context.subscriptions);
+}
+
 export function activate(context: vscode.ExtensionContext) {
     const currentVersion = vscode.extensions.getExtension('itsneufox.pawn-painter')?.packageJSON.version;
     const lastVersion = context.globalState.get('pawnpainter.lastVersion');
+    const isFirstInstall = !lastVersion;
 
-    if (currentVersion && currentVersion !== lastVersion) {
-        vscode.window.showInformationMessage('PAWN Painter has been updated!');
+    if (currentVersion) {
+        if (isFirstInstall) {
+            showSplashScreen(context, currentVersion);
+        } else if (currentVersion !== lastVersion) {
+            showSplashScreen(context, currentVersion);
+        }
         context.globalState.update('pawnpainter.lastVersion', currentVersion);
     }
 
