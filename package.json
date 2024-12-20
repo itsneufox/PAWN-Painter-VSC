@@ -76,7 +76,7 @@
         "category": "PAWN Painter"
       },
       {
-        "command": "pawnpainter.toggleInlineColors",
+        "command": "pawnpainter.toggleInlineColours",
         "title": "Toggle Inline Colour Highlighting",
         "category": "PAWN Painter"
       },
@@ -97,13 +97,13 @@
         "pawnpainter.general.enableColorPicker": {
           "type": "boolean",
           "default": true,
-          "description": "Enable the VS Code color picker for all supported color formats. This allows you to use the built-in color picker to modify colors in your code.",
+          "description": "Enable the VS Code colour picker for all supported colour formats. This allows you to use the built-in colour picker to modify colours in your code.",
           "order": 1
         },
         "pawnpainter.hex.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable highlighting for hexadecimal color codes (0xRRGGBB, 0xRRGGBBAA, {RRGGBB}).",
+          "description": "Enable highlighting for hexadecimal colour codes (0xRRGGBB, 0xRRGGBBAA, {RRGGBB}).",
           "order": 2
         },
         "pawnpainter.hex.style": {
@@ -114,24 +114,24 @@
             "background"
         ],
         "enumDescriptions": [
-            "Color the text directly with the specified color",
-            "Show a colored underline below the hex color code",
-            "Show a colored background behind the hex color code"
+            "Color the text directly with the specified colour",
+            "Show a coloured underline below the hex colour code",
+            "Show a coloured background behind the hex colour code"
         ],
         "default": "underline",
-        "description": "Choose how hex color codes should be highlighted in your code",
+        "description": "Choose how hex colour codes should be highlighted in your code",
         "order": 3
         },
         "pawnpainter.hex.showAlphaWarnings": {
           "type": "boolean",
           "default": true,
-          "description": "Show warning hints when a color has an alpha value of 00. This can help identify potentially unintended transparent colors.",
+          "description": "Show warning hints when a colour has an alpha value of 00. This can help identify potentially unintended transparent colours.",
           "order": 4
         },
         "pawnpainter.gameText.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable color preview for GameText color codes (~r~, ~g~, ~b~, etc.). Supports brightness modifiers (~h~) for enhanced colors.",
+          "description": "Enable colour preview for GameText colour codes (~r~, ~g~, ~b~, etc.). Supports brightness modifiers (~h~) for enhanced colours.",
           "order": 5
         },
         "pawnpainter.gameText.style": {
@@ -142,18 +142,18 @@
             "background"
           ],
           "enumDescriptions": [
-            "Color the text directly with the specified color",
-            "Show a colored underline below the text",
-            "Show a colored background behind the text"
+            "Color the text directly with the specified colour",
+            "Show a coloured underline below the text",
+            "Show a coloured background behind the text"
           ],
           "default": "text",
-          "description": "Choose how GameText colors should be displayed in your code",
+          "description": "Choose how GameText colours should be displayed in your code",
           "order": 6
         },
         "pawnpainter.inlineText.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable color highlighting for text between color tags (e.g., '{FF0000}red text, {FFFFFF}white text'). This helps visualize colored text.",
+          "description": "Enable colour highlighting for text between colour tags (e.g., '{FF0000}red text, {FFFFFF}white text'). This helps visualize coloured text.",
           "order": 7
         },
         "pawnpainter.inlineText.style": {
@@ -164,12 +164,12 @@
             "background"
           ],
           "enumDescriptions": [
-            "Color the text directly with the specified color",
-            "Show a colored underline below the text",
-            "Show a colored background behind the text"
+            "Color the text directly with the specified colour",
+            "Show a coloured underline below the text",
+            "Show a coloured background behind the text"
           ],
           "default": "text",
-          "description": "Choose how inline colored text should be displayed in your code",
+          "description": "Choose how inline coloured text should be displayed in your code",
           "order": 8
         }
       }

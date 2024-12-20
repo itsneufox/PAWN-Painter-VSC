@@ -7,14 +7,14 @@ interface ViewportInfo {
     buffer: number;
 }
 
-interface GameTextColor {
-    baseColor: vscode.Color;
+interface GameTextColour {
+    baseColour: vscode.Color;
     symbol: string;
 }
 
 interface ExtensionConfig {
     general: {
-        enableColorPicker: boolean;
+        enableColourPicker: boolean;
     };
     hex: {
         enabled: boolean;
@@ -33,7 +33,7 @@ interface ExtensionConfig {
 
 let config: ExtensionConfig = {
     general: {
-        enableColorPicker: true
+        enableColourPicker: true
     },
     hex: {
         enabled: true,
@@ -50,18 +50,18 @@ let config: ExtensionConfig = {
     }
 };
 
-const gameTextColors: { [key: string]: GameTextColor } = {
-    'r': { baseColor: new vscode.Color(0.61, 0.09, 0.10, 1), symbol: '~r~' },
-    'g': { baseColor: new vscode.Color(0.18, 0.35, 0.15, 1), symbol: '~g~' },
-    'b': { baseColor: new vscode.Color(0.17, 0.20, 0.43, 1), symbol: '~b~' },
-    'y': { baseColor: new vscode.Color(0.77, 0.65, 0.34, 1), symbol: '~y~' },
-    'p': { baseColor: new vscode.Color(0.57, 0.37, 0.85, 1), symbol: '~p~' },
-    'w': { baseColor: new vscode.Color(0.77, 0.77, 0.77, 1), symbol: '~w~' },
-    's': { baseColor: new vscode.Color(0.77, 0.77, 0.77, 1), symbol: '~s~' },
-    'l': { baseColor: new vscode.Color(0, 0, 0, 1), symbol: '~l~' },
+const gameTextColours: { [key: string]: GameTextColour } = {
+    'r': { baseColour: new vscode.Color(0.61, 0.09, 0.10, 1), symbol: '~r~' },
+    'g': { baseColour: new vscode.Color(0.18, 0.35, 0.15, 1), symbol: '~g~' },
+    'b': { baseColour: new vscode.Color(0.17, 0.20, 0.43, 1), symbol: '~b~' },
+    'y': { baseColour: new vscode.Color(0.77, 0.65, 0.34, 1), symbol: '~y~' },
+    'p': { baseColour: new vscode.Color(0.57, 0.37, 0.85, 1), symbol: '~p~' },
+    'w': { baseColour: new vscode.Color(0.77, 0.77, 0.77, 1), symbol: '~w~' },
+    's': { baseColour: new vscode.Color(0.77, 0.77, 0.77, 1), symbol: '~s~' },
+    'l': { baseColour: new vscode.Color(0, 0, 0, 1), symbol: '~l~' },
 };
 
-const lightenedColors: { [key: string]: vscode.Color[] } = {
+const lightenedColours: { [key: string]: vscode.Color[] } = {
     'r': [
         new vscode.Color(0.86, 0.12, 0.14, 1),
         new vscode.Color(0.86, 0.19, 0.22, 1),
@@ -92,13 +92,13 @@ const lightenedColors: { [key: string]: vscode.Color[] } = {
 };
 
 let gameTextDecorationTypes: { [key: string]: vscode.TextEditorDecorationType } = {};
-let hexColorDecorationTypes: Map<string, vscode.TextEditorDecorationType> = new Map();
-let inlineColorDecorationTypes: Map<string, vscode.TextEditorDecorationType> = new Map();
+let hexColourDecorationTypes: Map<string, vscode.TextEditorDecorationType> = new Map();
+let inlineColourDecorationTypes: Map<string, vscode.TextEditorDecorationType> = new Map();
 
 function loadConfiguration() {
     const vsConfig = vscode.workspace.getConfiguration('pawnpainter');
     
-    config.general.enableColorPicker = vsConfig.get('general.enableColorPicker', true);
+    config.general.enableColourPicker = vsConfig.get('general.enableColourPicker', true);
     config.hex.enabled = vsConfig.get('hex.enabled', true);
     config.hex.style = vsConfig.get('hex.style', 'underline');
     config.hex.showAlphaWarnings = vsConfig.get('hex.showAlphaWarnings', true);
@@ -129,21 +129,21 @@ function isWithinViewport(range: vscode.Range, viewport: ViewportInfo): boolean 
            range.end.line <= viewport.endLine;
 }
 
-function getLightenedColor(baseColor: vscode.Color, level: number): vscode.Color {
-    const baseColorKey = Object.keys(gameTextColors).find(key => {
-        const gameColor = gameTextColors[key];
-        return gameColor && gameColor.baseColor.red === baseColor.red &&
-               gameColor.baseColor.green === baseColor.green &&
-               gameColor.baseColor.blue === baseColor.blue &&
-               gameColor.baseColor.alpha === baseColor.alpha;
+function getLightenedColour(baseColour: vscode.Color, level: number): vscode.Color {
+    const baseColourKey = Object.keys(gameTextColours).find(key => {
+        const gameColour = gameTextColours[key];
+        return gameColour && gameColour.baseColour.red === baseColour.red &&
+               gameColour.baseColour.green === baseColour.green &&
+               gameColour.baseColour.blue === baseColour.blue &&
+               gameColour.baseColour.alpha === baseColour.alpha;
     });
     
-    if (!baseColorKey || !(baseColorKey in lightenedColors)) {
-        return baseColor;
+    if (!baseColourKey || !(baseColourKey in lightenedColours)) {
+        return baseColour;
     }
 
-    const colorArray = lightenedColors[baseColorKey] || [];
-    return (level > 0 && level - 1 < colorArray.length) ? colorArray[level - 1] : baseColor;
+    const colourArray = lightenedColours[baseColourKey] || [];
+    return (level > 0 && level - 1 < colourArray.length) ? colourArray[level - 1] : baseColour;
 }
 
 function componentToHex(c: number): string {
@@ -151,26 +151,26 @@ function componentToHex(c: number): string {
     return hex.length === 1 ? '0' + hex : hex;
 }
 
-function colorToHexWithoutAlpha(color: vscode.Color): string {
-    const r = componentToHex(color.red);
-    const g = componentToHex(color.green);
-    const b = componentToHex(color.blue);
+function colourToHexWithoutAlpha(colour: vscode.Color): string {
+    const r = componentToHex(colour.red);
+    const g = componentToHex(colour.green);
+    const b = componentToHex(colour.blue);
     return `#${r}${g}${b}`;
 }
 
-function colorToHexWithAlpha(color: vscode.Color): string {
-    const r = componentToHex(color.red);
-    const g = componentToHex(color.green);
-    const b = componentToHex(color.blue);
-    const a = componentToHex(color.alpha);
+function colourToHexWithAlpha(colour: vscode.Color): string {
+    const r = componentToHex(colour.red);
+    const g = componentToHex(colour.green);
+    const b = componentToHex(colour.blue);
+    const a = componentToHex(colour.alpha);
     return `#${r}${g}${b}${a}`;
 }
 
-function colorToRGBA(color: vscode.Color): string {
-    const r = Math.round(color.red * 255);
-    const g = Math.round(color.green * 255);
-    const b = Math.round(color.blue * 255);
-    const a = color.alpha;
+function colourToRGBA(colour: vscode.Color): string {
+    const r = Math.round(colour.red * 255);
+    const g = Math.round(colour.green * 255);
+    const b = Math.round(colour.blue * 255);
+    const a = colour.alpha;
     return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
@@ -200,20 +200,20 @@ function getFunctionNameAtPosition(document: vscode.TextDocument, position: vsco
     return functionMatch ? functionMatch[1] : undefined;
 }
 
-function parseColor(colorCode: string, context?: { 
+function parseColour(colourCode: string, context?: { 
     functionName?: string, 
     document?: vscode.TextDocument, 
     position?: vscode.Position 
-}): { color: vscode.Color, hasZeroAlpha?: boolean } | undefined {
+}): { colour: vscode.Color, hasZeroAlpha?: boolean } | undefined {
     try {
         if (context?.document && context?.position && 
             isWithinFunctionCall(context.document, context.position) &&
-            !context?.functionName?.match(/(?:Player)?TextDraw(?:Color|Colour)/)) {
+            !context?.functionName?.match(/(?:Player)?TextDraw(?:Colour|Colour)/)) {
             return undefined;
         }
 
-        if (context?.functionName?.match(/(?:Player)?TextDraw(?:Color|Colour)/)) {
-            const rgbMatch = colorCode.match(/^(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})$/);
+        if (context?.functionName?.match(/(?:Player)?TextDraw(?:Colour|Colour)/)) {
+            const rgbMatch = colourCode.match(/^(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})$/);
             if (rgbMatch) {
                 const [_, r, g, b] = rgbMatch;
                 const rVal = Math.min(255, Math.max(0, parseInt(r, 10)));
@@ -221,13 +221,13 @@ function parseColor(colorCode: string, context?: {
                 const bVal = Math.min(255, Math.max(0, parseInt(b, 10)));
                 
                 return {
-                    color: new vscode.Color(rVal / 255, gVal / 255, bVal / 255, 1)
+                    colour: new vscode.Color(rVal / 255, gVal / 255, bVal / 255, 1)
                 };
             }
         }
 
-        if (colorCode.startsWith("0x")) {
-            const hex = colorCode.slice(2);
+        if (colourCode.startsWith("0x")) {
+            const hex = colourCode.slice(2);
             const r = parseInt(hex.substr(0, 2), 16) / 255;
             const g = parseInt(hex.substr(2, 2), 16) / 255;
             const b = parseInt(hex.substr(4, 2), 16) / 255;
@@ -239,27 +239,27 @@ function parseColor(colorCode: string, context?: {
             }
             
             return {
-                color: new vscode.Color(r, g, b, a),
+                colour: new vscode.Color(r, g, b, a),
                 hasZeroAlpha
             };
         }
 
-        if (colorCode.startsWith("{") && colorCode.endsWith("}")) {
-            const hex = colorCode.slice(1, -1);
+        if (colourCode.startsWith("{") && colourCode.endsWith("}")) {
+            const hex = colourCode.slice(1, -1);
             const r = parseInt(hex.substr(0, 2), 16) / 255;
             const g = parseInt(hex.substr(2, 2), 16) / 255;
             const b = parseInt(hex.substr(4, 2), 16) / 255;
-            return { color: new vscode.Color(r, g, b, 1) };
+            return { colour: new vscode.Color(r, g, b, 1) };
         }
 
 
         if (!context?.document || !context?.position || !isWithinFunctionCall(context.document, context.position)) {
-            const rgbMatch = colorCode.match(/(?<![\d.])\b([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})(?:\s*,\s*([0-9]{1,3}))?\b/);
+            const rgbMatch = colourCode.match(/(?<![\d.])\b([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})(?:\s*,\s*([0-9]{1,3}))?\b/);
             if (rgbMatch) {
                 const [_, r, g, b, a] = rgbMatch;
                 if (parseInt(r) <= 255 && parseInt(g) <= 255 && parseInt(b) <= 255 && (!a || parseInt(a) <= 255)) {
                     return {
-                        color: new vscode.Color(
+                        colour: new vscode.Color(
                             parseInt(r) / 255,
                             parseInt(g) / 255,
                             parseInt(b) / 255,
@@ -276,21 +276,21 @@ function parseColor(colorCode: string, context?: {
     }
 }
 
-function createDecorationFromStyle(color: vscode.Color, style: 'text' | 'underline' | 'background'): vscode.DecorationRenderOptions {
+function createDecorationFromStyle(colour: vscode.Color, style: 'text' | 'underline' | 'background'): vscode.DecorationRenderOptions {
     switch (style) {
         case 'text':
             return {
-                color: colorToRGBA(color),
+                color: colourToRGBA(colour),
                 rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
             };
         case 'underline':
             return {
-                textDecoration: `none; border-bottom: 2px solid ${colorToRGBA(color)}`
+                textDecoration: `none; border-bottom: 2px solid ${colourToRGBA(colour)}`
             };
         case 'background':
             return {
-                backgroundColor: colorToRGBA({ ...color, alpha: 0.3 }),
-                border: `1px solid ${colorToRGBA(color)}`
+                backgroundColor: colourToRGBA({ ...colour, alpha: 0.3 }),
+                border: `1px solid ${colourToRGBA(colour)}`
             };
     }
 }
@@ -338,52 +338,52 @@ function updateGameTextDecorations(editor: vscode.TextEditor) {
                 segments.push({
                     text: quotedContent.slice(lastMatchEnd, gameTextMatch.index),
                     startIndex: lastMatchEnd,
-                    colorChar: null,
+                    colourChar: null,
                     lightLevels: 0
                 });
             }
 
-            const colorChar = gameTextMatch[1];
+            const colourChar = gameTextMatch[1];
             const lightLevels = (gameTextMatch[0].match(/~h~/g) || []).length;
             
-            const nextColorMatch = gameTextRegex.exec(quotedContent);
-            const endIndex = nextColorMatch ? nextColorMatch.index : quotedContent.length - 1;
-            gameTextRegex.lastIndex = nextColorMatch ? nextColorMatch.index : quotedContent.length;
+            const nextColourMatch = gameTextRegex.exec(quotedContent);
+            const endIndex = nextColourMatch ? nextColourMatch.index : quotedContent.length - 1;
+            gameTextRegex.lastIndex = nextColourMatch ? nextColourMatch.index : quotedContent.length;
 
             segments.push({
                 text: quotedContent.slice(gameTextMatch.index + gameTextMatch[0].length, endIndex),
                 startIndex: gameTextMatch.index + gameTextMatch[0].length,
-                colorChar,
+                colourChar,
                 lightLevels
             });
 
             lastMatchEnd = endIndex;
 
-            if (nextColorMatch) {
-                gameTextRegex.lastIndex = nextColorMatch.index;
+            if (nextColourMatch) {
+                gameTextRegex.lastIndex = nextColourMatch.index;
             }
         }
 
         const absoluteDocumentStart = editor.document.offsetAt(new vscode.Position(viewport.startLine, 0)) + absoluteStart;
 
         segments.forEach(segment => {
-            if (segment.colorChar && segment.colorChar in gameTextColors && segment.text.length > 0) {
+            if (segment.colourChar && segment.colourChar in gameTextColours && segment.text.length > 0) {
                 const absoluteSegmentStart = absoluteDocumentStart + segment.startIndex;
                 const rangeStart = editor.document.positionAt(absoluteSegmentStart);
                 const rangeEnd = editor.document.positionAt(absoluteSegmentStart + segment.text.length);
                 const range = new vscode.Range(rangeStart, rangeEnd);
 
                 if (isWithinViewport(range, viewport)) {
-                    const baseColor = gameTextColors[segment.colorChar].baseColor;
-                    const finalColor = getLightenedColor(baseColor, segment.lightLevels);
+                    const baseColour = gameTextColours[segment.colourChar].baseColour;
+                    const finalColour = getLightenedColour(baseColour, segment.lightLevels);
                     
-                    const decorationKey = `${segment.colorChar}_${segment.lightLevels}`;
+                    const decorationKey = `${segment.colourChar}_${segment.lightLevels}`;
                     if (!decorationsMap[decorationKey]) {
                         decorationsMap[decorationKey] = [];
                         
                         if (!gameTextDecorationTypes[decorationKey]) {
                             gameTextDecorationTypes[decorationKey] = vscode.window.createTextEditorDecorationType(
-                                createDecorationFromStyle(finalColor, config.gameText.style)
+                                createDecorationFromStyle(finalColour, config.gameText.style)
                             );
                         }
                     }
@@ -401,13 +401,13 @@ function updateGameTextDecorations(editor: vscode.TextEditor) {
     });
 }
 
-function updateHexColorDecorations(editor: vscode.TextEditor) {
+function updateHexColourDecorations(editor: vscode.TextEditor) {
     if (!config.hex.enabled || !editor) {
-        hexColorDecorationTypes.forEach(decoration => {
+        hexColourDecorationTypes.forEach(decoration => {
             editor.setDecorations(decoration, []);
             decoration.dispose();
         });
-        hexColorDecorationTypes.clear();
+        hexColourDecorationTypes.clear();
         return;
     }
 
@@ -417,11 +417,11 @@ function updateHexColorDecorations(editor: vscode.TextEditor) {
         new vscode.Position(viewport.endLine, Number.MAX_VALUE)
     ));
 
-    hexColorDecorationTypes.forEach(decoration => {
+    hexColourDecorationTypes.forEach(decoration => {
         editor.setDecorations(decoration, []);
         decoration.dispose();
     });
-    hexColorDecorationTypes.clear();
+    hexColourDecorationTypes.clear();
 
     const decorationsMap = new Map<string, vscode.DecorationOptions[]>();
     const absoluteStart = editor.document.offsetAt(new vscode.Position(viewport.startLine, 0));
@@ -429,36 +429,36 @@ function updateHexColorDecorations(editor: vscode.TextEditor) {
     const hexRegex = /\b0x[0-9A-Fa-f]{6,8}\b/g;
     let hexMatch;
     while ((hexMatch = hexRegex.exec(viewportText)) !== null) {
-        const colorCode = hexMatch[0];
+        const colourCode = hexMatch[0];
         const absolutePosition = absoluteStart + hexMatch.index;
         const position = editor.document.positionAt(absolutePosition);
         const functionName = getFunctionNameAtPosition(editor.document, position);
         
         const range = new vscode.Range(
             position,
-            editor.document.positionAt(absolutePosition + colorCode.length)
+            editor.document.positionAt(absolutePosition + colourCode.length)
         );
         
         if (isWithinViewport(range, viewport)) {
-            const parseResult = parseColor(colorCode, {
+            const parseResult = parseColour(colourCode, {
                 document: editor.document,
                 position: position,
                 functionName: functionName
             });
             
             if (parseResult) {
-                const color = parseResult.color;
-                const colorKey = colorToHexWithAlpha(color);
+                const colour = parseResult.colour;
+                const colourKey = colourToHexWithAlpha(colour);
 
-                if (!decorationsMap.has(colorKey)) {
-                    decorationsMap.set(colorKey, []);
+                if (!decorationsMap.has(colourKey)) {
+                    decorationsMap.set(colourKey, []);
                     const decorationType = vscode.window.createTextEditorDecorationType({
-                        ...createDecorationFromStyle(color, config.hex.style)
+                        ...createDecorationFromStyle(colour, config.hex.style)
                     });
-                    hexColorDecorationTypes.set(colorKey, decorationType);
+                    hexColourDecorationTypes.set(colourKey, decorationType);
                 }
 
-                decorationsMap.get(colorKey)!.push({
+                decorationsMap.get(colourKey)!.push({
                     range,
                     hoverMessage: config.hex.showAlphaWarnings && parseResult.hasZeroAlpha ? 
                         new vscode.MarkdownString(
@@ -474,28 +474,28 @@ function updateHexColorDecorations(editor: vscode.TextEditor) {
     const bracedRegex = /\{[0-9A-Fa-f]{6}\}/g;
     let bracedMatch;
     while ((bracedMatch = bracedRegex.exec(viewportText)) !== null) {
-        const colorCode = bracedMatch[0];
+        const colourCode = bracedMatch[0];
         const absolutePosition = absoluteStart + bracedMatch.index;
         const range = new vscode.Range(
             editor.document.positionAt(absolutePosition),
-            editor.document.positionAt(absolutePosition + colorCode.length)
+            editor.document.positionAt(absolutePosition + colourCode.length)
         );
         
         if (isWithinViewport(range, viewport)) {
-            const parseResult = parseColor(colorCode);
+            const parseResult = parseColour(colourCode);
             if (parseResult) {
-                const color = parseResult.color;
-                const colorKey = colorToHexWithAlpha(color);
+                const colour = parseResult.colour;
+                const colourKey = colourToHexWithAlpha(colour);
 
-                if (!decorationsMap.has(colorKey)) {
-                    decorationsMap.set(colorKey, []);
+                if (!decorationsMap.has(colourKey)) {
+                    decorationsMap.set(colourKey, []);
                     const decorationType = vscode.window.createTextEditorDecorationType({
-                        ...createDecorationFromStyle(color, config.hex.style)
+                        ...createDecorationFromStyle(colour, config.hex.style)
                     });
-                    hexColorDecorationTypes.set(colorKey, decorationType);
+                    hexColourDecorationTypes.set(colourKey, decorationType);
                 }
 
-                decorationsMap.get(colorKey)!.push({ range });
+                decorationsMap.get(colourKey)!.push({ range });
             }
         }
     }
@@ -516,45 +516,45 @@ function updateHexColorDecorations(editor: vscode.TextEditor) {
             );
 
             if (isWithinViewport(range, viewport)) {
-                const parseResult = parseColor(full, {
+                const parseResult = parseColour(full, {
                     document: editor.document,
                     position: position,
                     functionName: functionName
                 });
 
                 if (parseResult) {
-                    const color = parseResult.color;
-                    const colorKey = colorToHexWithAlpha(color);
+                    const colour = parseResult.colour;
+                    const colourKey = colourToHexWithAlpha(colour);
 
-                    if (!decorationsMap.has(colorKey)) {
-                        decorationsMap.set(colorKey, []);
+                    if (!decorationsMap.has(colourKey)) {
+                        decorationsMap.set(colourKey, []);
                         const decorationType = vscode.window.createTextEditorDecorationType({
-                            ...createDecorationFromStyle(color, config.hex.style)
+                            ...createDecorationFromStyle(colour, config.hex.style)
                         });
-                        hexColorDecorationTypes.set(colorKey, decorationType);
+                        hexColourDecorationTypes.set(colourKey, decorationType);
                     }
 
-                    decorationsMap.get(colorKey)!.push({ range });
+                    decorationsMap.get(colourKey)!.push({ range });
                 }
             }
         }
     }
 
-    decorationsMap.forEach((ranges, colorKey) => {
-        const decorationType = hexColorDecorationTypes.get(colorKey);
+    decorationsMap.forEach((ranges, colourKey) => {
+        const decorationType = hexColourDecorationTypes.get(colourKey);
         if (decorationType) {
             editor.setDecorations(decorationType, ranges);
         }
     });
 }
 
-function updateInlineColorDecorations(editor: vscode.TextEditor) {
+function updateInlineColourDecorations(editor: vscode.TextEditor) {
     if (!config.inlineText.enabled || !editor) {
-        inlineColorDecorationTypes.forEach(decoration => {
+        inlineColourDecorationTypes.forEach(decoration => {
             editor.setDecorations(decoration, []);
             decoration.dispose();
         });
-        inlineColorDecorationTypes.clear();
+        inlineColourDecorationTypes.clear();
         return;
     }
 
@@ -564,11 +564,11 @@ function updateInlineColorDecorations(editor: vscode.TextEditor) {
         new vscode.Position(viewport.endLine, Number.MAX_VALUE)
     ));
 
-    inlineColorDecorationTypes.forEach(decoration => {
+    inlineColourDecorationTypes.forEach(decoration => {
         editor.setDecorations(decoration, []);
         decoration.dispose();
     });
-    inlineColorDecorationTypes.clear();
+    inlineColourDecorationTypes.clear();
 
     const decorationsMap = new Map<string, vscode.DecorationOptions[]>();
     const absoluteStart = editor.document.offsetAt(new vscode.Position(viewport.startLine, 0));
@@ -578,65 +578,65 @@ function updateInlineColorDecorations(editor: vscode.TextEditor) {
 
     while ((quotedMatch = quotedTextRegex.exec(viewportText)) !== null) {
         const quotedContent = quotedMatch[0];
-        const colorTagRegex = /\{([0-9A-Fa-f]{6})\}(.*?)(?=\{[0-9A-Fa-f]{6}\}|")/g;
-        let colorMatch;
+        const colourTagRegex = /\{([0-9A-Fa-f]{6})\}(.*?)(?=\{[0-9A-Fa-f]{6}\}|")/g;
+        let colourMatch;
 
-        while ((colorMatch = colorTagRegex.exec(quotedContent)) !== null) {
-            const [_, colorCode, coloredText] = colorMatch;
-            if (!coloredText.trim()) continue;
+        while ((colourMatch = colourTagRegex.exec(quotedContent)) !== null) {
+            const [_, colourCode, colouredText] = colourMatch;
+            if (!colouredText.trim()) continue;
 
-            const absolutePosition = absoluteStart + quotedMatch.index + colorMatch.index;
-            const startPos = absolutePosition + colorMatch[1].length + 2;
+            const absolutePosition = absoluteStart + quotedMatch.index + colourMatch.index;
+            const startPos = absolutePosition + colourMatch[1].length + 2;
             const range = new vscode.Range(
                 editor.document.positionAt(startPos),
-                editor.document.positionAt(startPos + coloredText.length)
+                editor.document.positionAt(startPos + colouredText.length)
             );
 
             if (isWithinViewport(range, viewport)) {
-                const color = parseColor(`{${colorCode}}`);
-                if (!color) continue;
+                const colour = parseColour(`{${colourCode}}`);
+                if (!colour) continue;
 
-                const colorKey = colorToHexWithAlpha(color.color);
+                const colourKey = colourToHexWithAlpha(colour.colour);
 
-                if (!decorationsMap.has(colorKey)) {
-                    decorationsMap.set(colorKey, []);
+                if (!decorationsMap.has(colourKey)) {
+                    decorationsMap.set(colourKey, []);
                     const decorationType = vscode.window.createTextEditorDecorationType(
-                        createDecorationFromStyle(color.color, config.inlineText.style)
+                        createDecorationFromStyle(colour.colour, config.inlineText.style)
                     );
-                    inlineColorDecorationTypes.set(colorKey, decorationType);
+                    inlineColourDecorationTypes.set(colourKey, decorationType);
                 }
 
-                decorationsMap.get(colorKey)!.push({ range });
+                decorationsMap.get(colourKey)!.push({ range });
             }
         }
     }
 
-    decorationsMap.forEach((ranges, colorKey) => {
-        const decorationType = inlineColorDecorationTypes.get(colorKey);
+    decorationsMap.forEach((ranges, colourKey) => {
+        const decorationType = inlineColourDecorationTypes.get(colourKey);
         if (decorationType) {
             editor.setDecorations(decorationType, ranges);
         }
     });
 }
 
-const colorProvider: vscode.DocumentColorProvider = {
+const colourProvider: vscode.DocumentColorProvider = {
     provideDocumentColors(document) {
-        if (!config.general.enableColorPicker) return [];
+        if (!config.general.enableColourPicker) return [];
         
-        const colorRanges: vscode.ColorInformation[] = [];
+        const colourRanges: vscode.ColorInformation[] = [];
         const text = document.getText();
 
         const hexRegex = /(?:0x[0-9A-Fa-f]{6,8}|\{[0-9A-Fa-f]{6}\})/g;            
         let match;
         while ((match = hexRegex.exec(text)) !== null) {
-            const colorCode = match[0];
+            const colourCode = match[0];
             const range = new vscode.Range(
                 document.positionAt(match.index),
-                document.positionAt(match.index + colorCode.length)
+                document.positionAt(match.index + colourCode.length)
             );
-            const parseResult = parseColor(colorCode);
+            const parseResult = parseColour(colourCode);
             if (parseResult) {
-                colorRanges.push(new vscode.ColorInformation(range, parseResult.color));
+                colourRanges.push(new vscode.ColorInformation(range, parseResult.colour));
             }
         }
 
@@ -650,31 +650,31 @@ const colorProvider: vscode.DocumentColorProvider = {
                     document.positionAt(startPos),
                     document.positionAt(startPos + full.length)
                 );
-                const color = new vscode.Color(
+                const colour = new vscode.Color(
                     parseInt(r) / 255,
                     parseInt(g) / 255,
                     parseInt(b) / 255,
                     a ? parseInt(a) / 255 : 1
                 );
-                colorRanges.push(new vscode.ColorInformation(range, color));
+                colourRanges.push(new vscode.ColorInformation(range, colour));
             }
         }
 
-        return colorRanges;
+        return colourRanges;
     },
 
-    provideColorPresentations(color, context) {
-        if (!config.general.enableColorPicker) return [];
+    provideColorPresentations(colour, context) {
+        if (!config.general.enableColourPicker) return [];
 
         const originalText = context.document.getText(context.range).trim();
         const presentations: vscode.ColorPresentation[] = [];
 
         if (originalText.includes(',')) {
-            const r = Math.round(color.red * 255);
-            const g = Math.round(color.green * 255);
-            const b = Math.round(color.blue * 255);
+            const r = Math.round(colour.red * 255);
+            const g = Math.round(colour.green * 255);
+            const b = Math.round(colour.blue * 255);
             if (originalText.split(',').length > 3) {
-                const a = Math.round(color.alpha * 255);
+                const a = Math.round(colour.alpha * 255);
                 presentations.push(new vscode.ColorPresentation(`${r}, ${g}, ${b}, ${a}`));
             } else {
                 presentations.push(new vscode.ColorPresentation(`${r}, ${g}, ${b}`));
@@ -683,8 +683,8 @@ const colorProvider: vscode.DocumentColorProvider = {
         }
 
         if (originalText.startsWith('{') && originalText.endsWith('}')) {
-            const hexColor = colorToHexWithoutAlpha(color).slice(1);
-            presentations.push(new vscode.ColorPresentation(`{${hexColor}}`));
+            const hexColour = colourToHexWithoutAlpha(colour).slice(1);
+            presentations.push(new vscode.ColorPresentation(`{${hexColour}}`));
             return presentations;
         }
 
@@ -693,39 +693,24 @@ const colorProvider: vscode.DocumentColorProvider = {
             if (hasAlpha) {
                 const originalAlpha = originalText.slice(-2);
                 if (originalAlpha.toLowerCase() === '00') {
-                    const baseHex = colorToHexWithoutAlpha(color).slice(1);
+                    const baseHex = colourToHexWithoutAlpha(colour).slice(1);
                     presentations.push(new vscode.ColorPresentation(`0x${baseHex}00`));
                 } else {
-                    const fullHex = colorToHexWithAlpha(color).slice(1);
+                    const fullHex = colourToHexWithAlpha(colour).slice(1);
                     presentations.push(new vscode.ColorPresentation(`0x${fullHex}`));
                 }
             } else {
-                const baseHex = colorToHexWithoutAlpha(color).slice(1);
+                const baseHex = colourToHexWithoutAlpha(colour).slice(1);
                 presentations.push(new vscode.ColorPresentation(`0x${baseHex}`));
             }
             return presentations;
         }
 
-        const baseHex = colorToHexWithoutAlpha(color).slice(1);
+        const baseHex = colourToHexWithoutAlpha(colour).slice(1);
         presentations.push(new vscode.ColorPresentation(`0x${baseHex}`));
         return presentations;
     }
 };
-
-function createWebviewPanel(extensionUri: vscode.Uri): vscode.WebviewPanel {
-    const panel = vscode.window.createWebviewPanel(
-        'pawnPainterSplash',
-        'PAWN Painter',
-        vscode.ViewColumn.One,
-        {
-            enableScripts: true,
-            retainContextWhenHidden: true,
-            localResourceRoots: [extensionUri]
-        }
-    );
-    
-    return panel;
-}
 
 function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version: string): string {
     const logoPath = vscode.Uri.joinPath(extensionUri, 'images', 'repository-logo.png');
@@ -752,15 +737,15 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
                         <ul>
                             <li>
                                 <span class="feature-dot blue"></span>
-                                Real-time color highlighting for hex codes and RGB values
+                                Real-time colour highlighting for hex codes and RGB values
                             </li>
                             <li>
                                 <span class="feature-dot green"></span>
-                                Gametext color previews with support for color intensities
+                                Gametext colour previews with support for colour intensities
                             </li>
                             <li>
                                 <span class="feature-dot purple"></span>
-                                Built-in color picker for easy color selection
+                                Built-in colour picker for easy colour selection
                             </li>
                             <li>
                                 <span class="feature-dot orange"></span>
@@ -775,19 +760,19 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
                             <ul>
                                 <li>
                                     <span class="feature-dot blue"></span>
-                                    Better color detection when colors are used inside functions
+                                    Better colour detection when colours are used inside functions
                                 </li>
                                 <li>
                                     <span class="feature-dot blue"></span>
-                                    Colors now work better in TextDraw functions
+                                    Colours now work better in TextDraw functions
                                 </li>
                                 <li>
                                     <span class="feature-dot blue"></span>
-                                    Fixed issues where decimal numbers were incorrectly shown as colors
+                                    Fixed issues where decimal numbers were incorrectly shown as colours
                                 </li>
                                 <li>
                                     <span class="feature-dot blue"></span>
-                                    The extension is now smarter about where it shows colors
+                                    The extension is now smarter about where it shows colours
                                 </li>
                             </ul>
                         </div>
@@ -797,11 +782,11 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
                             <ul>
                                 <li>
                                     <span class="feature-dot orange"></span>
-                                    Fixed decimal numbers being highlighted as colors by mistake
+                                    Fixed decimal numbers being highlighted as colours by mistake
                                 </li>
                                 <li>
                                     <span class="feature-dot orange"></span>
-                                    Fixed some cases where colors weren't showing up correctly
+                                    Fixed some cases where colours weren't showing up correctly
                                 </li>
                                 <li>
                                     <span class="feature-dot orange"></span>
@@ -809,7 +794,7 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
                                 </li>
                                 <li>
                                     <span class="feature-dot orange"></span>
-                                    Better handling of RGB color values to prevent errors
+                                    Better handling of RGB colour values to prevent errors
                                 </li>
                             </ul>
                         </div>
@@ -819,19 +804,19 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
                             <ul>
                                 <li>
                                     <span class="feature-dot green"></span>
-                                    Color detection is now more accurate
+                                    Colour detection is now more accurate
                                 </li>
                                 <li>
                                     <span class="feature-dot green"></span>
-                                    Better handling of different color formats
+                                    Better handling of different colour formats
                                 </li>
                                 <li>
                                     <span class="feature-dot green"></span>
-                                    The extension now checks colors more carefully
+                                    The extension now checks colours more carefully
                                 </li>
                                 <li>
                                     <span class="feature-dot green"></span>
-                                    Colors work better in more situations
+                                    Colours work better in more situations
                                 </li>
                             </ul>
                         </div>
@@ -847,9 +832,9 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
             <style>
                 body {
                     padding: 20px;
-                    color: var(--vscode-foreground);
+                    colour: var(--vscode-foreground);
                     font-family: var(--vscode-font-family);
-                    background-color: var(--vscode-editor-background);
+                    background-colour: var(--vscode-editor-background);
                 }
 
                 .container {
@@ -870,13 +855,13 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
                 }
 
                 .version {
-                    color: var(--vscode-textPreformat-foreground);
+                    colour: var(--vscode-textPreformat-foreground);
                     font-size: 14px;
                     margin-top: 10px;
                 }
 
                 .features h2 {
-                    color: var(--vscode-textLink-foreground);
+                    colour: var(--vscode-textLink-foreground);
                     font-size: 18px;
                     margin-bottom: 15px;
                 }
@@ -890,10 +875,10 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
                     flex-shrink: 0;
                 }
 
-                .blue { background-color: #007acc; }
-                .green { background-color: #28a745; }
-                .purple { background-color: #6f42c1; }
-                .orange { background-color: #f66a0a; }
+                .blue { background-colour: #007acc; }
+                .green { background-colour: #28a745; }
+                .purple { background-colour: #6f42c1; }
+                .orange { background-colour: #f66a0a; }
 
                 .changelog-grid {
                     display: grid;
@@ -903,14 +888,14 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
                 }
 
                 .changelog-box {
-                    background-color: var(--vscode-editor-background);
+                    background-colour: var(--vscode-editor-background);
                     border: 1px solid var(--vscode-widget-border);
                     border-radius: 6px;
                     padding: 15px;
                 }
 
                 .changelog-box h3 {
-                    color: var(--vscode-textLink-foreground);
+                    colour: var(--vscode-textLink-foreground);
                     font-size: 16px;
                     margin-bottom: 15px;
                     margin-top: 0;
@@ -935,8 +920,8 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
                 }
 
                 button {
-                    background-color: var(--vscode-button-background);
-                    color: var(--vscode-button-foreground);
+                    background-colour: var(--vscode-button-background);
+                    colour: var(--vscode-button-foreground);
                     border: none;
                     padding: 8px 16px;
                     border-radius: 4px;
@@ -945,12 +930,12 @@ function getWebviewHtml(panel: vscode.Webview, extensionUri: vscode.Uri, version
                 }
 
                 button:hover {
-                    background-color: var(--vscode-button-hoverBackground);
+                    background-colour: var(--vscode-button-hoverBackground);
                 }
 
                 .auto-close-text {
                     margin-top: 10px;
-                    color: var(--vscode-descriptionForeground);
+                    colour: var(--vscode-descriptionForeground);
                     font-size: 12px;
                     opacity: 0.8;
                 }
@@ -1020,8 +1005,8 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.onDidChangeActiveTextEditor(editor => {
             if (editor) {
                 updateGameTextDecorations(editor);
-                updateHexColorDecorations(editor);
-                updateInlineColorDecorations(editor);
+                updateHexColourDecorations(editor);
+                updateInlineColourDecorations(editor);
             }
         }),
 
@@ -1029,22 +1014,22 @@ export function activate(context: vscode.ExtensionContext) {
             const editor = vscode.window.activeTextEditor;
             if (editor && event.document === editor.document) {
                 updateGameTextDecorations(editor);
-                updateHexColorDecorations(editor);
-                updateInlineColorDecorations(editor);
+                updateHexColourDecorations(editor);
+                updateInlineColourDecorations(editor);
             }
         }),
 
         vscode.window.onDidChangeTextEditorVisibleRanges(event => {
             if (event.textEditor) {
                 updateGameTextDecorations(event.textEditor);
-                updateHexColorDecorations(event.textEditor);
-                updateInlineColorDecorations(event.textEditor);
+                updateHexColourDecorations(event.textEditor);
+                updateInlineColourDecorations(event.textEditor);
             }
         }),
 
         vscode.workspace.onDidChangeConfiguration(e => {
             if ([
-                'general.enableColorPicker',
+                'general.enableColourPicker',
                 'hex.enabled',
                 'hex.style',
                 'hex.showAlphaWarnings',
@@ -1058,8 +1043,8 @@ export function activate(context: vscode.ExtensionContext) {
                 const editor = vscode.window.activeTextEditor;
                 if (editor) {
                     updateGameTextDecorations(editor);
-                    updateHexColorDecorations(editor);
-                    updateInlineColorDecorations(editor);
+                    updateHexColourDecorations(editor);
+                    updateInlineColourDecorations(editor);
                 }
             }
         })
@@ -1068,36 +1053,36 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.languages.registerColorProvider(
             { language: "pawn", scheme: "file" },
-            colorProvider
+            colourProvider
         ),
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand("pawnpainter.toggleHexColorHighlight", async () => {
+        vscode.commands.registerCommand("pawnpainter.toggleHexColourHighlight", async () => {
             const vsConfig = vscode.workspace.getConfiguration('pawnpainter');
             config.hex.enabled = !config.hex.enabled;
             await vsConfig.update('hex.enabled', config.hex.enabled, vscode.ConfigurationTarget.Global);
             if (vscode.window.activeTextEditor) {
-                updateHexColorDecorations(vscode.window.activeTextEditor);
+                updateHexColourDecorations(vscode.window.activeTextEditor);
             }
             vscode.window.showInformationMessage(
                 `Hex Colour Highlighting ${config.hex.enabled ? 'enabled' : 'disabled'}`
             );
         }),
 
-        vscode.commands.registerCommand("pawnpainter.toggleInlineColors", async () => {
+        vscode.commands.registerCommand("pawnpainter.toggleInlineColours", async () => {
             const vsConfig = vscode.workspace.getConfiguration('pawnpainter');
             config.inlineText.enabled = !config.inlineText.enabled;
             await vsConfig.update('inlineText.enabled', config.inlineText.enabled, vscode.ConfigurationTarget.Global);
             if (vscode.window.activeTextEditor) {
-                updateInlineColorDecorations(vscode.window.activeTextEditor);
+                updateInlineColourDecorations(vscode.window.activeTextEditor);
             }
             vscode.window.showInformationMessage(
                 `Inline Colour Highlighting ${config.inlineText.enabled ? 'enabled' : 'disabled'}`
             );
         }),
 
-        vscode.commands.registerCommand("pawnpainter.toggleGameTextColorPicker", async () => {
+        vscode.commands.registerCommand("pawnpainter.toggleGameTextColourPicker", async () => {
             const vsConfig = vscode.workspace.getConfiguration('pawnpainter');
             config.gameText.enabled = !config.gameText.enabled;
             await vsConfig.update('gameText.enabled', config.gameText.enabled, vscode.ConfigurationTarget.Global);
@@ -1109,20 +1094,20 @@ export function activate(context: vscode.ExtensionContext) {
             );
         }),
 
-        vscode.commands.registerCommand("pawnpainter.toggleNormalColorPicker", async () => {
+        vscode.commands.registerCommand("pawnpainter.toggleNormalColourPicker", async () => {
             const vsConfig = vscode.workspace.getConfiguration('pawnpainter');
-            config.general.enableColorPicker = !config.general.enableColorPicker;
-            await vsConfig.update('general.enableColorPicker', config.general.enableColorPicker, vscode.ConfigurationTarget.Global);
+            config.general.enableColourPicker = !config.general.enableColourPicker;
+            await vsConfig.update('general.enableColourPicker', config.general.enableColourPicker, vscode.ConfigurationTarget.Global);
             vscode.window.showInformationMessage(
-                `Normal Colour Picker ${config.general.enableColorPicker ? 'enabled' : 'disabled'}`
+                `Normal Colour Picker ${config.general.enableColourPicker ? 'enabled' : 'disabled'}`
             );
         })
     );
 
     if (vscode.window.activeTextEditor) {
         updateGameTextDecorations(vscode.window.activeTextEditor);
-        updateHexColorDecorations(vscode.window.activeTextEditor);
-        updateInlineColorDecorations(vscode.window.activeTextEditor);
+        updateHexColourDecorations(vscode.window.activeTextEditor);
+        updateInlineColourDecorations(vscode.window.activeTextEditor);
     }
 }
 
@@ -1130,10 +1115,10 @@ export function deactivate() {
     Object.values(gameTextDecorationTypes).forEach(decorationType => {
         decorationType.dispose();
     });
-    hexColorDecorationTypes.forEach(decoration => {
+    hexColourDecorationTypes.forEach(decoration => {
         decoration.dispose();
     });
-    inlineColorDecorationTypes.forEach(decoration => {
+    inlineColourDecorationTypes.forEach(decoration => {
         decoration.dispose();
     });
 }
