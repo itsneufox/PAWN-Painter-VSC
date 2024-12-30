@@ -13,7 +13,8 @@ export interface ExtensionConfig {
     };
     inlineText: {
         enabled: boolean;
-        style: DecorationStyle;
+        codeStyle: DecorationStyle;
+        textStyle: DecorationStyle;
     };
 }
 
@@ -34,6 +35,7 @@ export const DEFAULT_CONFIG: ExtensionConfig = {
     },
     inlineText: {
         enabled: true,
-        style: 'text'
+        codeStyle: 'underline',
+        textStyle: 'text'
     }
 };

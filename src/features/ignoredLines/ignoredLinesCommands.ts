@@ -23,7 +23,7 @@ export function registerIgnoredLinesCommands(context: vscode.ExtensionContext): 
             });
 
             await manager.addIgnoredLines(filePath, lines, contents);
-            vscode.window.showInformationMessage(`${lines.length} line(s) will no longer show color highlighting`);
+            vscode.window.showInformationMessage(`${lines.length} line(s) colour highlighting ignored`);
         })
     );
 
@@ -45,12 +45,12 @@ export function registerIgnoredLinesCommands(context: vscode.ExtensionContext): 
             });
 
             if (lines.length === 0) {
-                vscode.window.showInformationMessage('No ignored lines in selection');
+                vscode.window.showInformationMessage('No ignored lines found in selection');
                 return;
             }
 
             await manager.removeIgnoredLines(filePath, lines);
-            vscode.window.showInformationMessage(`${lines.length} line(s) will now show color highlighting`);
+            vscode.window.showInformationMessage(`${lines.length} line(s) colour highlighting restored`);
         })
     );
 
@@ -63,14 +63,14 @@ export function registerIgnoredLinesCommands(context: vscode.ExtensionContext): 
     context.subscriptions.push(
         vscode.commands.registerCommand('pawnpainter.clearIgnoredLines', async () => {
             const result = await vscode.window.showWarningMessage(
-                'Are you sure you want to clear all ignored lines?',
+                'Are you sure you want to clear the ignore history?',
                 'Yes',
                 'No'
             );
 
             if (result === 'Yes') {
                 await manager.clearAllIgnoredLines();
-                vscode.window.showInformationMessage('All ignored lines have been cleared');
+                vscode.window.showInformationMessage('Ignore history has been cleared');
             }
         })
     );

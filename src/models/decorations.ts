@@ -60,21 +60,30 @@ export class DecorationManager {
     public createDecorationFromStyle(color: vscode.Color, style: DecorationStyle): vscode.DecorationRenderOptions {
         const colorRgba = `rgba(${Math.round(color.red * 255)}, ${Math.round(color.green * 255)}, ${Math.round(color.blue * 255)}, ${color.alpha})`;
 
+        const baseOptions: vscode.DecorationRenderOptions = {
+            rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
+            isWholeLine: false
+        };
+
         switch (style) {
             case 'text':
                 return {
+                    ...baseOptions,
                     color: colorRgba,
-                    rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
                 };
             case 'underline':
                 return {
-                    textDecoration: `none; border-bottom: 2px solid ${colorRgba}`
+                    ...baseOptions,
+                    textDecoration: `none; border-bottom: 2px solid ${colorRgba}`,
                 };
             case 'background':
                 return {
+                    ...baseOptions,
                     backgroundColor: `rgba(${Math.round(color.red * 255)}, ${Math.round(color.green * 255)}, ${Math.round(color.blue * 255)}, 0.3)`,
-                    border: `1px solid ${colorRgba}`
+                    border: `1px solid ${colorRgba}`,
                 };
+            default:
+                return baseOptions;
         }
     }
 

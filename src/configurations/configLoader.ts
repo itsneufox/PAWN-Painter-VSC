@@ -39,7 +39,8 @@ export class ConfigurationLoader {
             },
             inlineText: {
                 enabled: vsConfig.get('inlineText.enabled', DEFAULT_CONFIG.inlineText.enabled),
-                style: vsConfig.get('inlineText.style', DEFAULT_CONFIG.inlineText.style)
+                codeStyle: vsConfig.get('inlineText.codeStyle', DEFAULT_CONFIG.inlineText.codeStyle),
+                textStyle: vsConfig.get('inlineText.textStyle', DEFAULT_CONFIG.inlineText.textStyle)
             }
         };
     }

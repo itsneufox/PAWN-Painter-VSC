@@ -23,7 +23,7 @@ export class IgnoredLinesView {
 
         const panel = vscode.window.createWebviewPanel(
             'ignoredLines',
-            'PAWN Painter - Ignored Lines',
+            'PAWN Painter - Ignore History',
             columnToShowIn || vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -85,7 +85,7 @@ export class IgnoredLinesView {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>PAWN Painter - Ignored Lines</title>
+            <title>PAWN Painter - Ignore History</title>
             <style>
                 body {
                     padding: 20px;
@@ -141,10 +141,10 @@ export class IgnoredLinesView {
         <body>
             ${ignoredLines.length === 0 ? `
                 <div class="empty-state">
-                    No ignored lines found.<br>
-                    Right-click on a line and select "Ignore Line" to add one.
+                    No ignored colours found.<br>
+                    Right-click on a line and select "Ignore Colour on Selected Line(s)" to add one.
                 </div>
-            ` : 
+            ` :
             Object.entries(groupedByFile).map(([fileName, lines]) => `
                 <div class="file-group">
                     <div class="file-header">${fileName}</div>
@@ -159,7 +159,7 @@ export class IgnoredLinesView {
                                     Go to Line
                                 </button>
                                 <button onclick="removeLine('${escapeHtml(line.filePath)}', ${line.line})">
-                                    Remove
+                                    Restore
                                 </button>
                             </div>
                         </div>

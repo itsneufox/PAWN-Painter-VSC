@@ -53,6 +53,34 @@ export class IgnoredLinesManager {
         return this.ignoredLines.has(filePath) && this.ignoredLines.get(filePath)!.has(line);
     }
 
+    public async removeIgnoredLines(filePath: string, lines: number[]): Promise<void> {
+        if (!this.ignoredLines.has(filePath)) return;
+        
+        const lineSet = this.ignoredLines.get(filePath)!;
+        lines.forEach(line => lineSet.delete(line));
+        this.lineDetails = this.lineDetails.filter(
+            detail => !(detail.filePath === filePath && lines.includes(detail.line))
+        );
+        
+        if (lineSet.size === 0) {
+            this.ignoredLines.delete(filePath);
+        }
+        
+        await this.saveIgnoredLines();
+        this.refreshDecorations();
+    }
+    
+    private refreshDecorations() {
+        // Refresh all visible PAWN editors
+        vscode.window.visibleTextEditors
+            .filter(editor => editor.document.languageId === 'pawn')
+            .forEach(async editor => {
+                // Force color provider to refresh by toggling language mode
+                await vscode.languages.setTextDocumentLanguage(editor.document, 'plaintext');
+                await vscode.languages.setTextDocumentLanguage(editor.document, 'pawn');
+            });
+    }
+
     public async addIgnoredLines(filePath: string, lines: number[], contents: string[]): Promise<void> {
         if (!this.ignoredLines.has(filePath)) {
             this.ignoredLines.set(filePath, new Set());
@@ -71,32 +99,7 @@ export class IgnoredLinesManager {
         });
         
         await this.saveIgnoredLines();
-        
-        this.refreshActiveEditor();
-    }
-
-    public async removeIgnoredLines(filePath: string, lines: number[]): Promise<void> {
-        if (!this.ignoredLines.has(filePath)) return;
-        const lineSet = this.ignoredLines.get(filePath)!;
-        lines.forEach(line => lineSet.delete(line));
-        this.lineDetails = this.lineDetails.filter(
-            detail => !(detail.filePath === filePath && lines.includes(detail.line))
-        );
-        if (lineSet.size === 0) {
-            this.ignoredLines.delete(filePath);
-        }
-        
-        await this.saveIgnoredLines();
-        
-        this.refreshActiveEditor();
-    }
-
-    private refreshActiveEditor() {
-        const activeEditor = vscode.window.activeTextEditor;
-        if (activeEditor) {
-            const decorationType = vscode.window.createTextEditorDecorationType({});
-            activeEditor.setDecorations(decorationType, []);
-        }
+        this.refreshDecorations();
     }
 
     public getAllIgnoredLines(): IgnoredLine[] {
@@ -107,10 +110,9 @@ export class IgnoredLinesManager {
         this.ignoredLines.clear();
         this.lineDetails = [];
         await this.saveIgnoredLines();
-        
-        this.refreshActiveEditor();
+        this.refreshDecorations();
     }
-
+    
     public dispose() {
         this._onLinesChanged.dispose();
     }

@@ -8,41 +8,46 @@ import { COMMANDS } from './constants';
 import { registerIgnoredLinesCommands } from './features/ignoredLines/ignoredLinesCommands';
 import { IgnoredLinesManager } from './features/ignoredLines/ignoredLinesManager';
 
-
 export async function activate(context: vscode.ExtensionContext) {
     const configLoader = ConfigurationLoader.getInstance();
     const updateService = UpdateService.getInstance();
     const colorProvider = new ColorProvider();
     
     await WebviewProvider.checkVersionAndShowSplash(context);
-
     updateService.initialize(context);
-
     registerIgnoredLinesCommands(context);
+
+    // Register color provider only ONCE with combined selector
+    context.subscriptions.push(
+        vscode.languages.registerColorProvider(
+            [
+                { scheme: 'file', language: 'pawn' },
+                { scheme: 'file', pattern: '**/*.pwn' },
+                { scheme: 'file', pattern: '**/*.inc' },
+                { scheme: 'file', pattern: '**/*.p' },
+                { scheme: 'file', pattern: '**/*.pawno' }
+            ],
+            colorProvider
+        )
+    );
+
+    await vscode.workspace.getConfiguration('editor', null)
+        .update('colorDecorators', true, vscode.ConfigurationTarget.Global);
+
+    if (vscode.window.activeTextEditor) {
+        updateService.updateAllDecorations(vscode.window.activeTextEditor);
+    }
 
     const ignoredLinesManager = IgnoredLinesManager.getInstance(context);
 
     context.subscriptions.push(
         ignoredLinesManager.onLinesChanged(() => {
-            vscode.window.visibleTextEditors.forEach(editor => {
-                if (editor.document.languageId === 'pawn') {
-                    const fullRange = new vscode.Range(
-                        editor.document.positionAt(0),
-                        editor.document.positionAt(editor.document.getText().length)
-                    );
-                    vscode.commands.executeCommand('editor.action.colorPresentation', editor.document.uri, fullRange);
-                    
+            vscode.window.visibleTextEditors
+                .filter(editor => editor.document.languageId === 'pawn')
+                .forEach(editor => {
                     updateService.updateAllDecorations(editor);
-                }
-            });
+                });
         })
-    );
-
-    context.subscriptions.push(
-        vscode.languages.registerColorProvider(
-            { language: "pawn", scheme: "file" },
-            colorProvider
-        )
     );
 
     registerCommands(context, configLoader, updateService);
