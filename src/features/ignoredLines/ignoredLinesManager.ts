@@ -71,11 +71,9 @@ export class IgnoredLinesManager {
     }
     
     private refreshDecorations() {
-        // Refresh all visible PAWN editors
         vscode.window.visibleTextEditors
             .filter(editor => editor.document.languageId === 'pawn')
             .forEach(async editor => {
-                // Force color provider to refresh by toggling language mode
                 await vscode.languages.setTextDocumentLanguage(editor.document, 'plaintext');
                 await vscode.languages.setTextDocumentLanguage(editor.document, 'pawn');
             });

@@ -17,7 +17,6 @@ export async function activate(context: vscode.ExtensionContext) {
     updateService.initialize(context);
     registerIgnoredLinesCommands(context);
 
-    // Register color provider only ONCE with combined selector
     context.subscriptions.push(
         vscode.languages.registerColorProvider(
             [
