@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 
 export class WebviewProvider {
     private static readonly VERSION_KEY = 'pawnpainter.lastVersion';
@@ -17,15 +16,14 @@ export class WebviewProvider {
         const isFirstInstall = !lastVersion;
 
         if (isFirstInstall || currentVersion !== lastVersion) {
-            await this.showSplashScreen(context, currentVersion);
+            await this.showSplashScreen(context);
             await context.globalState.update(this.VERSION_KEY, currentVersion);
         }
     }
-    private static readonly SPLASH_SCREEN_TIMEOUT = 30000;
+    private static readonly SPLASH_SCREEN_TIMEOUT = 60000;
 
     public static async showSplashScreen(
         context: vscode.ExtensionContext,
-        version: string
     ): Promise<void> {
         const panel = vscode.window.createWebviewPanel(
             'pawnPainterSplash',
@@ -38,7 +36,7 @@ export class WebviewProvider {
             }
         );
 
-        panel.webview.html = this.getWebviewHtml(panel.webview, context.extensionUri, version);
+        panel.webview.html = this.getWebviewHtml(panel.webview, context.extensionUri);
 
         panel.webview.onDidReceiveMessage(
             message => {
@@ -67,239 +65,277 @@ export class WebviewProvider {
     private static getWebviewHtml(
         webview: vscode.Webview,
         extensionUri: vscode.Uri,
-        version: string
     ): string {
         const logoPath = vscode.Uri.joinPath(extensionUri, 'images', 'repository-logo.png');
         const logoUri = webview.asWebviewUri(logoPath);
 
         return `<!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:;">
-                <title>PAWN Painter</title>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <img src="${logoUri}" alt="PAWN Painter" class="logo">
-                        <p class="version">Version ${version}</p>
-                    </div>
-                    
-                    <div class="content">
-                        <div class="features">
-                            <h2>Key Features</h2>
-                            <ul>
-                                <li>
-                                    <span class="feature-dot blue"></span>
-                                    Real-time colour highlighting for hex codes and RGB values
-                                </li>
-                                <li>
-                                    <span class="feature-dot green"></span>
-                                    Gametext colour previews with support for colour intensities
-                                </li>
-                                <li>
-                                    <span class="feature-dot purple"></span>
-                                    Built-in colour picker for easy colour selection
-                                </li>
-                                <li>
-                                    <span class="feature-dot orange"></span>
-                                    Customizable highlighting styles
-                                </li>
-                            </ul>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:;">
+        <title>PAWN Painter</title>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <img src="${logoUri}" alt="PAWN Painter" class="logo">
+            </div>
+            
+            <div class="hero">
+                <h1>Welcome to the New <span class="rainbow-text">PAWN</span> Painter</h1>
+                <p class="subtitle">Completely rewritten from the ground up</p>
+            </div>
+
+            <div class="content">
+                <div class="grid">
+                    <div class="update-box rewrite">
+                        <div class="box-header">
+                            <div class="header-line"></div>
+                            <h2>Complete Rewrite</h2>
                         </div>
-
-                        <div class="changelog-grid">
-                            <div class="changelog-box">
-                                <h3>What's New</h3>
-                                <ul>
-                                    <li>
-                                        <span class="feature-dot blue"></span>
-                                        Better colour detection in functions
-                                    </li>
-                                    <li>
-                                        <span class="feature-dot blue"></span>
-                                        Improved TextDraw function support
-                                    </li>
-                                    <li>
-                                        <span class="feature-dot blue"></span>
-                                        Fixed decimal number detection
-                                    </li>
-                                    <li>
-                                        <span class="feature-dot blue"></span>
-                                        Smarter context-aware coloring
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div class="changelog-box">
-                                <h3>Bug Fixes</h3>
-                                <ul>
-                                    <li>
-                                        <span class="feature-dot orange"></span>
-                                        Fixed decimal number highlighting
-                                    </li>
-                                    <li>
-                                        <span class="feature-dot orange"></span>
-                                        Improved color detection accuracy
-                                    </li>
-                                    <li>
-                                        <span class="feature-dot orange"></span>
-                                        Fixed alpha value handling
-                                    </li>
-                                    <li>
-                                        <span class="feature-dot orange"></span>
-                                        Better RGB value validation
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div class="changelog-box">
-                                <h3>Improvements</h3>
-                                <ul>
-                                    <li>
-                                        <span class="feature-dot green"></span>
-                                        Enhanced color detection accuracy
-                                    </li>
-                                    <li>
-                                        <span class="feature-dot green"></span>
-                                        Better format handling
-                                    </li>
-                                    <li>
-                                        <span class="feature-dot green"></span>
-                                        Improved color validation
-                                    </li>
-                                    <li>
-                                        <span class="feature-dot green"></span>
-                                        Broader color support
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
+                        <ul>
+                            <li><span class="highlight purple">Modern</span> TypeScript codebase</li>
+                            <li><span class="highlight purple">Enhanced</span> performance & stability</li>
+                            <li><span class="highlight purple">Improved</span> error handling</li>
+                            <li><span class="highlight purple">Better</span> code organization</li>
+                        </ul>
                     </div>
 
-                    <div class="footer">
-                        <button onclick="vscode.postMessage({type: 'close'})">Let's Paint Some Code!</button>
-                        <p class="auto-close-text">or wait 30 seconds for this window to close automatically</p>
+                    <div class="update-box features">
+                        <div class="box-header">
+                            <div class="header-line"></div>
+                            <h2>New Features</h2>
+                        </div>
+                        <ul>
+                            <li><span class="highlight blue">Ignore</span> specific color highlights</li>
+                            <li><span class="highlight blue">History</span> with line preview</li>
+                            <li><span class="highlight blue">Restore</span> ignored colors easily</li>
+                            <li><span class="highlight blue">Multi-line</span> color ignore support</li>
+                        </ul>
+                    </div>
+
+                    <div class="update-box improvements">
+                        <div class="box-header">
+                            <div class="header-line"></div>
+                            <h2>Improvements</h2>
+                        </div>
+                        <ul>
+                            <li><span class="highlight green">Smarter</span> color detection</li>
+                            <li><span class="highlight green">Enhanced</span> TextDraw support</li>
+                            <li><span class="highlight green">Optimized</span> performance</li>
+                            <li><span class="highlight green">Better</span> context handling</li>
+                        </ul>
                     </div>
                 </div>
+            </div>
 
-                <style>
-                    body {
-                        padding: 20px;
-                        color: var(--vscode-foreground);
-                        font-family: var(--vscode-font-family);
-                        background-color: var(--vscode-editor-background);
-                    }
+            <div class="footer">
+                <button id="closeButton" class="cta-button">Let's Paint Some Code!</button>
+                <p class="auto-close">This window will close automatically in 60 seconds</p>
+            </div>
+        </div>
 
-                    .container {
-                        max-width: 1000px;
-                        margin: 0 auto;
-                    }
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                color: var(--vscode-foreground);
+                font-family: var(--vscode-font-family);
+                background-color: var(--vscode-editor-background);
+                line-height: 1.6;
+            }
 
-                    .header {
-                        text-align: center;
-                        margin-bottom: 30px;
-                    }
+            .container {
+                max-width: 1000px;
+                margin: 0 auto;
+                padding: 2rem;
+            }
 
-                    .logo {
-                        width: 100%;
-                        max-width: 800px;
-                        height: auto;
-                        margin-bottom: 20px;
-                    }
+            .header {
+                text-align: center;
+                position: relative;
+                margin-bottom: 2rem;
+            }
 
-                    .version {
-                        color: var(--vscode-textPreformat-foreground);
-                        font-size: 14px;
-                        margin-top: 10px;
-                    }
+            .logo {
+                width: 100%;
+                max-width: 600px;
+                height: auto;
+                display: block;
+                margin: 0 auto;
+                margin-bottom: 1.5rem;
+            }
 
-                    .features h2 {
-                        color: var(--vscode-textLink-foreground);
-                        font-size: 18px;
-                        margin-bottom: 15px;
-                    }
+            .hero {
+                text-align: center;
+                margin-bottom: 3rem;
+            }
 
-                    .feature-dot {
-                        width: 8px;
-                        height: 8px;
-                        border-radius: 50%;
-                        margin-right: 10px;
-                        margin-top: 6px;
-                        flex-shrink: 0;
-                    }
+            .hero h1 {
+                font-size: 2.2rem;
+                color: var(--vscode-textLink-foreground);
+                margin: 0;
+                margin-bottom: 0.5rem;
+            }
 
-                    .blue { background-color: #007acc; }
-                    .green { background-color: #28a745; }
-                    .purple { background-color: #6f42c1; }
-                    .orange { background-color: #f66a0a; }
+            .subtitle {
+                font-size: 1.2rem;
+                color: var(--vscode-descriptionForeground);
+                margin: 0;
+            }
 
-                    .changelog-grid {
-                        display: grid;
-                        grid-template-columns: repeat(3, 1fr);
-                        gap: 20px;
-                        margin-top: 30px;
-                    }
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.5rem;
+                margin-bottom: 3rem;
+            }
 
-                    .changelog-box {
-                        background-color: var(--vscode-editor-background);
-                        border: 1px solid var(--vscode-widget-border);
-                        border-radius: 6px;
-                        padding: 15px;
-                    }
+            .update-box {
+                background-color: var(--vscode-editor-background);
+                border: 1px solid var(--vscode-widget-border);
+                border-radius: 8px;
+                padding: 1.5rem;
+                transition: transform 0.2s ease;
+            }
 
-                    .changelog-box h3 {
-                        color: var(--vscode-textLink-foreground);
-                        font-size: 16px;
-                        margin-bottom: 15px;
-                        margin-top: 0;
-                    }
+            .update-box:hover {
+                transform: translateY(-3px);
+            }
 
-                    .changelog-box ul {
-                        margin: 0;
-                        padding: 0;
-                        list-style: none;
-                    }
+            .box-header {
+                margin-bottom: 1.5rem;
+                position: relative;
+            }
 
-                    .changelog-box li {
-                        display: flex;
-                        align-items: flex-start;
-                        margin-bottom: 12px;
-                        line-height: 1.4;
-                    }
+            .header-line {
+                position: absolute;
+                top: 0;
+                left: -1.5rem;
+                width: 4px;
+                height: 100%;
+                border-radius: 2px;
+            }
 
-                    .footer {
-                        text-align: center;
-                        margin-top: 30px;
-                    }
+            .rewrite .header-line {
+                background-color: #6f42c1;
+            }
 
-                    button {
-                        background-color: var(--vscode-button-background);
-                        color: var(--vscode-button-foreground);
-                        border: none;
-                        padding: 8px 16px;
-                        border-radius: 4px;
-                        cursor: pointer;
-                        font-size: 14px;
-                    }
+            .features .header-line {
+                background-color: #007acc;
+            }
 
-                    button:hover {
-                        background-color: var(--vscode-button-hoverBackground);
-                    }
+            .improvements .header-line {
+                background-color: #28a745;
+            }
 
-                    .auto-close-text {
-                        margin-top: 10px;
-                        color: var(--vscode-descriptionForeground);
-                        font-size: 12px;
-                        opacity: 0.8;
-                    }
-                </style>
-                <script>
-                    const vscode = acquireVsCodeApi();
-                </script>
-            </body>
-                            </html>`;
+            .box-header h2 {
+                margin: 0;
+                font-size: 1.3rem;
+                color: var(--vscode-textLink-foreground);
+                padding-left: 0.5rem;
+            }
+
+            .update-box ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .update-box li {
+                margin-bottom: 0.8rem;
+                display: flex;
+                align-items: center;
+                position: relative;
+                padding-left: 0.5rem;
+            }
+
+            .highlight {
+                font-weight: bold;
+                margin-right: 0.3rem;
+            }
+
+            .purple { color: #6f42c1; }
+            .blue { color: #007acc; }
+            .green { color: #28a745; }
+
+            .footer {
+                text-align: center;
+            }
+
+            .cta-button {
+                background-color: var(--vscode-button-background);
+                color: var(--vscode-button-foreground);
+                border: none;
+                padding: 0.8rem 1.8rem;
+                border-radius: 4px;
+                font-size: 1rem;
+                cursor: pointer;
+                transition: background-color 0.2s ease;
+            }
+
+            .cta-button:hover {
+                background-color: var(--vscode-button-hoverBackground);
+            }
+
+            .auto-close {
+                margin-top: 1rem;
+                color: var(--vscode-descriptionForeground);
+                font-size: 0.9rem;
+                opacity: 0.8;
+            }
+
+            @media (max-width: 800px) {
+                .grid {
+                    grid-template-columns: 1fr;
+                    gap: 1rem;
+                }
+
+                .hero h1 {
+                    font-size: 1.8rem;
+                }
+
+                .container {
+                    padding: 1rem;
                 }
             }
+            .rainbow-text {
+                background-image: linear-gradient(
+                    90deg,
+                    #ff0000 0%,
+                    #ff9a00 16%,
+                    #d0de21 32%,
+                    #4fdc4a 48%,
+                    #3fdad8 64%,
+                    #2fc9e2 80%,
+                    #9b4cff 90%,
+                    #ff6b97 95%,
+                    #ff0000 100%
+                );
+                background-size: 200% auto;
+                background-clip: text;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                animation: shine 3s linear infinite;
+            }
+
+            @keyframes shine {
+                to {
+                    background-position: 200% center;
+                }
+            }
+        </style>
+
+        <script>
+            const vscode = acquireVsCodeApi();
+            
+            document.getElementById('closeButton').addEventListener('click', () => {
+                vscode.postMessage({ type: 'close' });
+            });
+        </script>
+    </body>
+    </html>`;
+    }
+}
