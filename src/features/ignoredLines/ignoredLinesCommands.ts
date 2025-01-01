@@ -59,19 +59,4 @@ export function registerIgnoredLinesCommands(context: vscode.ExtensionContext): 
             IgnoredLinesView.createOrShow(context);
         })
     );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand('pawnpainter.clearIgnoredLines', async () => {
-            const result = await vscode.window.showWarningMessage(
-                'Are you sure you want to clear the ignore history?',
-                'Yes',
-                'No'
-            );
-
-            if (result === 'Yes') {
-                await manager.clearAllIgnoredLines();
-                vscode.window.showInformationMessage('Ignore history has been cleared');
-            }
-        })
-    );
 }

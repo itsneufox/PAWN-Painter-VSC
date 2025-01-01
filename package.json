@@ -106,15 +106,15 @@
           "category": "PAWN Painter"
       },
       {
-          "command": "pawnpainter.showIgnoredLines",
-          "title": "History Of All Ignored Lines",
-          "category": "PAWN Painter"
-      },
-      {
         "command": "pawnpainter.clearIgnoredLines",
         "title": "Clear All Ignored Lines",
         "category": "PAWN Painter"
-      }
+      },
+      {
+        "command": "pawnpainter.showIgnoredLines",
+        "title": "History Of All Ignored Lines",
+        "category": "PAWN Painter"
+    }
     ],
     "menus": {
       "editor/context": [
