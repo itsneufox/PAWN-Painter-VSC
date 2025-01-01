@@ -10,7 +10,7 @@ export class ColorProvider implements vscode.DocumentColorProvider {
     ): vscode.ProviderResult<vscode.ColorInformation[]> {
         const colorRanges: vscode.ColorInformation[] = [];
         const text = document.getText();
-        const manager = IgnoredLinesManager.getInstance(); // Get instance here instead
+        const manager = IgnoredLinesManager.getInstance();
 
         // Match hex colors (0xRRGGBB and 0xRRGGBBAA)
         const hexRegex = /\b0x([0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?)\b/g;
@@ -115,7 +115,7 @@ export class ColorProvider implements vscode.DocumentColorProvider {
         color: vscode.Color,
         context: { document: vscode.TextDocument; range: vscode.Range }
     ): vscode.ProviderResult<vscode.ColorPresentation[]> {
-        const manager = IgnoredLinesManager.getInstance(); // Get instance here instead
+        const manager = IgnoredLinesManager.getInstance();
         
         // Skip if line is ignored
         if (manager && manager.isLineIgnored(

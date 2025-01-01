@@ -155,10 +155,10 @@ export class IgnoredLinesView {
                                 <span class="line-content">${escapeHtml(line.content)}</span>
                             </div>
                             <div class="action-buttons">
-                                <button onclick="openFile('${escapeHtml(line.filePath)}', ${line.line})">
+                                <button onclick="openFile('${escapeHtml(line.filePath.replace(/\\/g, '\\\\'))}', ${line.line})">
                                     Go to Line
                                 </button>
-                                <button onclick="removeLine('${escapeHtml(line.filePath)}', ${line.line})">
+                                <button onclick="removeLine('${escapeHtml(line.filePath.replace(/\\/g, '\\\\'))}', ${line.line})">
                                     Restore
                                 </button>
                             </div>

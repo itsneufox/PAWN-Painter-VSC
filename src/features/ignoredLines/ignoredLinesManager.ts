@@ -86,14 +86,18 @@ export class IgnoredLinesManager {
         
         const lineSet = this.ignoredLines.get(filePath)!;
         const timestamp = Date.now();
+        
         lines.forEach((line, index) => {
-            lineSet.add(line);
-            this.lineDetails.push({
-                filePath,
-                line,
-                content: contents[index],
-                timestamp
-            });
+            const content = contents[index].trim();
+            if (content && !lineSet.has(line)) {
+                lineSet.add(line);
+                this.lineDetails.push({
+                    filePath,
+                    line,
+                    content,
+                    timestamp
+                });
+            }
         });
         
         await this.saveIgnoredLines();
