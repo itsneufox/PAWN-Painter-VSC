@@ -3,6 +3,20 @@ import * as vscode from 'vscode';
 export class WebviewProvider {
     private static readonly VERSION_KEY = 'pawnpainter.lastVersion';
 
+    private static parseVersion(version: string): { major: number; minor: number; patch: number } {
+        const [major = 0, minor = 0, patch = 0] = version.split('.').map(Number);
+        return { major, minor, patch };
+    }
+
+    private static isSignificantUpdate(currentVersion: string, lastVersion: string): boolean {
+        const current = this.parseVersion(currentVersion);
+        const last = this.parseVersion(lastVersion);
+
+        // Show splash screen only for major or minor version changes
+        return current.major > last.major || 
+               (current.major === last.major && current.minor > last.minor);
+    }
+
     public static async checkVersionAndShowSplash(
         context: vscode.ExtensionContext
     ): Promise<void> {
@@ -12,14 +26,15 @@ export class WebviewProvider {
         }
 
         const currentVersion = extension.packageJSON.version;
-        const lastVersion = context.globalState.get(this.VERSION_KEY);
+        const lastVersion = context.globalState.get<string>(WebviewProvider.VERSION_KEY);
         const isFirstInstall = !lastVersion;
 
-        if (isFirstInstall || currentVersion !== lastVersion) {
+        if (isFirstInstall || (lastVersion && this.isSignificantUpdate(currentVersion, lastVersion))) {
             await this.showSplashScreen(context);
-            await context.globalState.update(this.VERSION_KEY, currentVersion);
+            await context.globalState.update(WebviewProvider.VERSION_KEY, currentVersion);
         }
     }
+
     private static readonly SPLASH_SCREEN_TIMEOUT = 60000;
 
     public static async showSplashScreen(
@@ -109,10 +124,10 @@ export class WebviewProvider {
                             <h2>New Features</h2>
                         </div>
                         <ul>
-                            <li><span class="highlight blue">Ignore</span> specific color highlights</li>
+                            <li><span class="highlight blue">Ignore</span> specific colour highlights</li>
                             <li><span class="highlight blue">History</span> with line preview</li>
-                            <li><span class="highlight blue">Restore</span> ignored colors easily</li>
-                            <li><span class="highlight blue">Multi-line</span> color ignore support</li>
+                            <li><span class="highlight blue">Restore</span> ignored colours easily</li>
+                            <li><span class="highlight blue">Multi-line</span> colour ignore support</li>
                         </ul>
                     </div>
 
@@ -122,7 +137,7 @@ export class WebviewProvider {
                             <h2>Improvements</h2>
                         </div>
                         <ul>
-                            <li><span class="highlight green">Smarter</span> color detection</li>
+                            <li><span class="highlight green">Smarter</span> colour detection</li>
                             <li><span class="highlight green">Enhanced</span> TextDraw support</li>
                             <li><span class="highlight green">Optimized</span> performance</li>
                             <li><span class="highlight green">Better</span> context handling</li>
