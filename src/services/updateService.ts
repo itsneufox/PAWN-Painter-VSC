@@ -55,17 +55,28 @@ export class UpdateService {
         }
     }
 
-    public  updateAllDecorations(editor: vscode.TextEditor): void {
+    private updateTimeout: NodeJS.Timeout | undefined;
+    private lastUpdateTime: number = 0;
+    private readonly MIN_UPDATE_INTERVAL = 150;
+
+    public updateAllDecorations(editor: vscode.TextEditor): void {
         if (this.updateTimeout) {
             clearTimeout(this.updateTimeout);
         }
-
-        this.updateTimeout = setTimeout(() => {
+    
+        const now = Date.now();
+        const timeSinceLastUpdate = now - this.lastUpdateTime;
+    
+        if (timeSinceLastUpdate < this.MIN_UPDATE_INTERVAL) {
+            this.updateTimeout = setTimeout(() => {
+                this.performUpdate(editor);
+                this.lastUpdateTime = Date.now();
+            }, this.MIN_UPDATE_INTERVAL - timeSinceLastUpdate);
+        } else {
             this.performUpdate(editor);
-        }, 100);
+            this.lastUpdateTime = now;
+        }
     }
-
-    private updateTimeout: NodeJS.Timeout | undefined;
 
     private performUpdate(editor: vscode.TextEditor): void {
         try {

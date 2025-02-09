@@ -21,8 +21,20 @@ export class ConfigurationLoader {
         return this.currentConfig;
     }
 
+    private configCache: Map<string, any> = new Map();
+
     public loadConfiguration(): void {
         const vsConfig = vscode.workspace.getConfiguration('pawnpainter');
+
+        const updateIfChanged = (section: string, key: string, defaultValue: any) => {
+            const cacheKey = `${section}.${key}`;
+            const newValue = vsConfig.get(`${section}.${key}`, defaultValue);
+            if (this.configCache.get(cacheKey) !== newValue) {
+                this.configCache.set(cacheKey, newValue);
+                return newValue;
+            }
+            return this.configCache.get(cacheKey);
+        };
         
         this.currentConfig = {
             general: {

@@ -106,5 +106,8 @@ export class DecorationManager {
         this.disposeGameTextDecorations();
         this.disposeHexColorDecorations();
         this.disposeInlineColorDecorations();
+        this.hexColorDecorations = new Map();
+        this.inlineColorDecorations = new Map();
+        this.gameTextDecorations = {};
     }
 }

@@ -31,8 +31,8 @@ export const CONFIG_KEYS = {
 };
 
 export const REGEX_PATTERNS = {
-    HEX_COLOR: /(?:0x[0-9A-Fa-f]{6,8}|\{[0-9A-Fa-f]{6}\})/g,
-    RGB_COLOR: /(?<![\d.])\b([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})(?:\s*,\s*([0-9]{1,3}))?\b/g,
+    HEX_COLOR: /(?:0x[0-9A-F]{6,8}|\{[0-9A-F]{6}\})/gi,
+    RGB_COLOR: /(?:^|[^\d.])(\d{1,3})\s,\s(\d{1,3})\s,\s(\d{1,3})(?:\s,\s(\d{1,3}))?\b/g,
     QUOTED_TEXT: /"[^"]*"/g,
     GAME_TEXT_COLOR: /~([rgbyplws])~(?:~h~)*/g,
     FUNCTION_CALL: /\b[A-Za-z_][A-Za-z0-9_]*\s*\(/,
