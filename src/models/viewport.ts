@@ -7,7 +7,7 @@ export interface ViewportInfo {
 }
 
 export class ViewportManager {
-    private static readonly DEFAULT_BUFFER_SIZE = 200;
+    private static readonly DEFAULT_BUFFER_SIZE = 100;
 
     public static getVisibleRangeWithBuffer(editor: vscode.TextEditor): ViewportInfo {
         const visibleRanges = editor.visibleRanges;
