@@ -75,6 +75,15 @@ export class DecorationManagerService {
         for (const hexMatch of hexMatches) {
             const colorCode = hexMatch[0];
             const position = editor.document.positionAt(absoluteStart + hexMatch.index!);
+
+            if (colorCode.startsWith('{')) {
+                const line = editor.document.lineAt(position.line).text;
+                const isInQuotes = this.isInsideQuotes(line, position.character);
+                if (isInQuotes) {
+                    continue;
+                }
+            }
+
             const functionName = this.functionUtils.getFunctionNameAtPosition(editor.document, position);
 
             const range = new vscode.Range(
@@ -139,6 +148,33 @@ export class DecorationManagerService {
                 editor.setDecorations(decorationType, decorations);
             }
         });
+    }
+
+    private isInsideQuotes(line: string, position: number): boolean {
+        let inQuotes = false;
+        let escaping = false;
+        
+        for (let i = 0; i < position; i++) {
+            if (line[i] === '\\' && !escaping) {
+                escaping = true;
+            } else if (line[i] === '"' && !escaping) {
+                inQuotes = !inQuotes;
+                escaping = false;
+            } else {
+                escaping = false;
+            }
+        }
+        
+        // Check if there's a closing quote after our position
+        if (inQuotes) {
+            for (let i = position; i < line.length; i++) {
+                if (line[i] === '"' && line[i-1] !== '\\') {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 
     public updateInlineColorDecorations(editor: vscode.TextEditor): void {
@@ -375,48 +411,50 @@ export class DecorationManagerService {
     ) {
         const parseResult = this.colorParser.parseColor(`{${colorCode}}`);
         if (!parseResult) return;
-
+    
         const color = parseResult.color;
         const colorKey = this.colorUtils.colorToHexWithAlpha(color);
-
+    
         // Apply style to the color code
         const codeKey = `${colorKey}_code`;
         if (!decorationsMap.has(codeKey)) {
             decorationsMap.set(codeKey, []);
+            // This is where the style is applied - make sure codeStyle is passed correctly
             const decorationType = vscode.window.createTextEditorDecorationType(
                 this.decorationManager.createDecorationFromStyle(color, codeStyle)
             );
             this.decorationManager.setInlineColorDecoration(codeKey, decorationType);
         }
         decorationsMap.get(codeKey)!.push({ range });
-
+    
         // Find the text after the color code until next color code or quote
         const lineText = editor.lineAt(range.end.line).text;
         const startPos = range.end.character;
         let endPos = lineText.length;
-
+    
         // Look for next color code or closing quote
         const nextColorIndex = lineText.indexOf('{', startPos);
         const nextQuoteIndex = lineText.indexOf('"', startPos);
-
+    
         if (nextColorIndex !== -1) {
             endPos = nextColorIndex;
         }
         if (nextQuoteIndex !== -1 && nextQuoteIndex < endPos) {
             endPos = nextQuoteIndex;
         }
-
+    
         // Create range for the text
         const textRange = new vscode.Range(
             range.end,
             new vscode.Position(range.end.line, endPos)
         );
-
+    
         // Apply style to the text if it's not empty
         if (endPos > startPos) {
             const textKey = `${colorKey}_text`;
             if (!decorationsMap.has(textKey)) {
                 decorationsMap.set(textKey, []);
+                // This is where textStyle is applied - make sure textStyle is passed correctly
                 const decorationType = vscode.window.createTextEditorDecorationType(
                     this.decorationManager.createDecorationFromStyle(color, textStyle)
                 );
