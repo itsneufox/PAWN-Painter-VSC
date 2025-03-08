@@ -26,16 +26,7 @@ export class ConfigurationLoader {
     public loadConfiguration(): void {
         const vsConfig = vscode.workspace.getConfiguration('pawnpainter');
 
-        const updateIfChanged = (section: string, key: string, defaultValue: any) => {
-            const cacheKey = `${section}.${key}`;
-            const newValue = vsConfig.get(`${section}.${key}`, defaultValue);
-            if (this.configCache.get(cacheKey) !== newValue) {
-                this.configCache.set(cacheKey, newValue);
-                return newValue;
-            }
-            return this.configCache.get(cacheKey);
-        };
-        
+        // Update the configuration with values from VS Code settings
         this.currentConfig = {
             general: {
                 enableColourPicker: vsConfig.get('general.enableColourPicker', DEFAULT_CONFIG.general.enableColourPicker)
@@ -64,6 +55,13 @@ export class ConfigurationLoader {
     ): Promise<void> {
         const vsConfig = vscode.workspace.getConfiguration('pawnpainter');
         await vsConfig.update(`${String(section)}.${String(key)}`, value, vscode.ConfigurationTarget.Global);
+        
+        // Immediately update the local config to reflect changes
+        if (section in this.currentConfig && key in this.currentConfig[section]) {
+            (this.currentConfig[section] as any)[key] = value;
+        }
+        
+        // Reload full configuration to ensure consistency
         this.loadConfiguration();
     }
 }

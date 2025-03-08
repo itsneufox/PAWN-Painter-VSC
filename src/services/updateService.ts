@@ -97,6 +97,7 @@ export class UpdateService {
             'gameText.enabled',
             'gameText.style',
             'inlineText.enabled',
+            'inlineText.codeStyle',
             'inlineText.style'
         ];
 

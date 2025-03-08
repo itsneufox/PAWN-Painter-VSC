@@ -419,7 +419,6 @@ export class DecorationManagerService {
         const codeKey = `${colorKey}_code`;
         if (!decorationsMap.has(codeKey)) {
             decorationsMap.set(codeKey, []);
-            // This is where the style is applied - make sure codeStyle is passed correctly
             const decorationType = vscode.window.createTextEditorDecorationType(
                 this.decorationManager.createDecorationFromStyle(color, codeStyle)
             );
@@ -454,7 +453,6 @@ export class DecorationManagerService {
             const textKey = `${colorKey}_text`;
             if (!decorationsMap.has(textKey)) {
                 decorationsMap.set(textKey, []);
-                // This is where textStyle is applied - make sure textStyle is passed correctly
                 const decorationType = vscode.window.createTextEditorDecorationType(
                     this.decorationManager.createDecorationFromStyle(color, textStyle)
                 );
