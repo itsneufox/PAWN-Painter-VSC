@@ -1491,36 +1491,33 @@ to {
 </style>
 
 <script>
-  const vscode = acquireVsCodeApi();
-  
-  document.getElementById('closeButton').addEventListener('click', () => {
-      vscode.postMessage({ type: 'close' });
-  });
-
-  function openTab(tabName) {
-      // Hide all tab content
-      const tabContents = document.getElementsByClassName('tab-pane');
-      for (let i = 0; i < tabContents.length; i++) {
-          tabContents[i].classList.remove('active');
-      }
-
-      // Remove active class from all tab buttons
-      const tabButtons = document.getElementsByClassName('tab-button');
-      for (let i = 0; i < tabButtons.length; i++) {
-          tabButtons[i].classList.remove('active');
-      }
-
-      // Show the selected tab content
-      document.getElementById(tabName).classList.add('active');
+  <script>
+      const vscode = acquireVsCodeApi();
       
-      // Add active class to the clicked button
-      const buttons = document.querySelectorAll('.tab-button');
-      buttons.forEach(button => {
-          if (button.getAttribute('onclick').includes(tabName)) {
-              button.classList.add('active');
-          }
+      document.getElementById('closeButton').addEventListener('click', () => {
+          vscode.postMessage({ type: 'close' });
       });
-  }
+
+      function openTab(tabName) {
+          const tabContents = document.getElementsByClassName('tab-pane');
+          for (let i = 0; i < tabContents.length; i++) {
+              tabContents[i].classList.remove('active');
+          }
+
+          const tabButtons = document.getElementsByClassName('tab-button');
+          for (let i = 0; i < tabButtons.length; i++) {
+              tabButtons[i].classList.remove('active');
+          }
+
+          document.getElementById(tabName).classList.add('active');
+
+          const buttons = document.querySelectorAll('.tab-button');
+          buttons.forEach(button => {
+              if (button.getAttribute('onclick').includes(tabName)) {
+                  button.classList.add('active');
+              }
+          });
+      }
 </script>
     </body>
 </html>`;

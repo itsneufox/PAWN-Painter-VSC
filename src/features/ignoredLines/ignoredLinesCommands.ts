@@ -4,7 +4,23 @@ import { IgnoredLinesView } from './ignoredLinesView';
 
 export function registerIgnoredLinesCommands(context: vscode.ExtensionContext): void {
     const manager = IgnoredLinesManager.getInstance(context);
-    
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('pawnpainter.clearIgnoredLines', async () => {
+            const confirmation = await vscode.window.showWarningMessage(
+                'Are you sure you want to clear all ignored lines?',
+                { modal: true },
+                'Yes',
+                'No'
+            );
+            
+            if (confirmation === 'Yes') {
+                await manager.clearAllIgnoredLines();
+                vscode.window.showInformationMessage('All ignored lines have been cleared');
+            }
+        })
+    );
+
     context.subscriptions.push(
         vscode.commands.registerCommand('pawnpainter.ignoreLine', async () => {
             const editor = vscode.window.activeTextEditor;
