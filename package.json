@@ -1,7 +1,7 @@
 {
   "name": "pawn-painter",
   "displayName": "PAWN Painter",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Colour picker for open.mp and SA-MP",
   "publisher": "itsneufox",
   "icon": "images/icon.png",
