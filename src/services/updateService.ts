@@ -90,7 +90,7 @@ export class UpdateService {
 
     private isRelevantConfigurationChange(e: vscode.ConfigurationChangeEvent): boolean {
         const relevantSettings = [
-            'general.enableColorPicker',
+            'general.enableColourPicker',
             'hex.enabled',
             'hex.style',
             'hex.showAlphaWarnings',
@@ -108,8 +108,17 @@ export class UpdateService {
     }
 
     private handleConfigurationChange(): void {
-        this.configLoader.loadConfiguration();
 
+        const previousConfig = { ...this.configLoader.getConfig() };
+        
+        this.configLoader.loadConfiguration();
+        const newConfig = this.configLoader.getConfig();
+        
+        if (previousConfig.general.enableColourPicker !== newConfig.general.enableColourPicker) {
+            vscode.workspace.getConfiguration('editor', null)
+                .update('colorDecorators', newConfig.general.enableColourPicker, vscode.ConfigurationTarget.Global);
+        }
+        
         const editor = vscode.window.activeTextEditor;
         if (editor) {
             this.updateAllDecorations(editor);

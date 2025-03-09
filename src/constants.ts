@@ -59,9 +59,9 @@ export const UI_MESSAGES = {
             `Normal Colour Picker ${enabled ? 'enabled' : 'disabled'}`
     },
     WARNINGS: {
-        ZERO_ALPHA: "This colour has alpha value of 00.\n" +
+        ZERO_ALPHA: "This colour has an alpha value of 00.\n" +
                    "If it's intentional or you use bitwise operations,\n" +
-                   "consider disregarding this message!"
+                   "you may disregard this message!"
     }
 };
 

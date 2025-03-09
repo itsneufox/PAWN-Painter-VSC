@@ -363,9 +363,9 @@ export class DecorationManagerService {
                 range,
                 hoverMessage: this.configLoader.getConfig().hex.showAlphaWarnings && 
                              parseResult.hasZeroAlpha ? 
-                             new vscode.MarkdownString("This colour has alpha value of 00.\n" +
-                                                     "If it's intentional or you use bitwise operations,\n" +
-                                                     "consider disregarding this message!") : 
+                             new vscode.MarkdownString("This colour has an alpha value of 00.  \n" +
+                                                       "If it's intentional or you use bitwise operations,  \n" +
+                                                       "you may disregard this message!") : 
                              undefined
             };
 

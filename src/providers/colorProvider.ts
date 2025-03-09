@@ -1,13 +1,27 @@
 import * as vscode from 'vscode';
 import { IgnoredLinesManager } from '../features/ignoredLines/ignoredLinesManager';
 import { FunctionUtils } from '../utils/functionUtils';
+import { ConfigurationLoader } from '../configurations/configLoader';
 
 export class ColorProvider implements vscode.DocumentColorProvider {
     private functionUtils = new FunctionUtils();
+    private configLoader = ConfigurationLoader.getInstance();
 
     public provideDocumentColors(
         document: vscode.TextDocument
     ): vscode.ProviderResult<vscode.ColorInformation[]> {
+        const config = this.configLoader.getConfig();
+        
+        console.log(`PAWN Painter: Color picker enabled: ${config.general.enableColourPicker}`);
+        
+        if (!config.general.enableColourPicker) {
+            console.log('PAWN Painter: Color picker disabled, returning empty array');
+            return [];
+        }
+    
+        console.log('PAWN Painter: Color picker enabled, providing colors');
+    
+
         const colorRanges: vscode.ColorInformation[] = [];
         const text = document.getText();
         const manager = IgnoredLinesManager.getInstance();
@@ -115,6 +129,12 @@ export class ColorProvider implements vscode.DocumentColorProvider {
         color: vscode.Color,
         context: { document: vscode.TextDocument; range: vscode.Range }
     ): vscode.ProviderResult<vscode.ColorPresentation[]> {
+        const config = this.configLoader.getConfig();
+
+        if (!config.general.enableColourPicker) {
+            return Promise.resolve([]);
+        }
+
         const manager = IgnoredLinesManager.getInstance();
         
         // Skip if line is ignored

@@ -17,19 +17,12 @@ export class ConfigurationLoader {
         return ConfigurationLoader.instance;
     }
 
-    public getConfig(): ExtensionConfig {
-        return this.currentConfig;
-    }
-
-    private configCache: Map<string, any> = new Map();
-
     public loadConfiguration(): void {
         const vsConfig = vscode.workspace.getConfiguration('pawnpainter');
 
-        // Update the configuration with values from VS Code settings
         this.currentConfig = {
             general: {
-                enableColourPicker: vsConfig.get('general.enableColourPicker', DEFAULT_CONFIG.general.enableColourPicker)
+                enableColourPicker: vsConfig.get('general.enableColorPicker', DEFAULT_CONFIG.general.enableColourPicker)
             },
             hex: {
                 enabled: vsConfig.get('hex.enabled', DEFAULT_CONFIG.hex.enabled),
@@ -49,6 +42,11 @@ export class ConfigurationLoader {
         };
     }
 
+    public getConfig(): ExtensionConfig {
+        this.loadConfiguration();
+        return this.currentConfig;
+    }
+
     public async updateConfig<K extends keyof ExtensionConfig>(
         section: K,
         key: keyof ExtensionConfig[K],
@@ -57,12 +55,10 @@ export class ConfigurationLoader {
         const vsConfig = vscode.workspace.getConfiguration('pawnpainter');
         await vsConfig.update(`${String(section)}.${String(key)}`, value, vscode.ConfigurationTarget.Global);
         
-        // Immediately update the local config to reflect changes
         if (section in this.currentConfig && key in this.currentConfig[section]) {
             (this.currentConfig[section] as any)[key] = value;
         }
         
-        // Reload full configuration to ensure consistency
         this.loadConfiguration();
     }
 }

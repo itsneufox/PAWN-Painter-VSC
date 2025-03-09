@@ -30,8 +30,9 @@ export async function activate(context: vscode.ExtensionContext) {
         )
     );
 
+    const config = configLoader.getConfig();
     await vscode.workspace.getConfiguration('editor', null)
-        .update('colorDecorators', true, vscode.ConfigurationTarget.Global);
+        .update('colorDecorators', config.general.enableColourPicker, vscode.ConfigurationTarget.Global);
 
     if (vscode.window.activeTextEditor) {
         updateService.updateAllDecorations(vscode.window.activeTextEditor);
@@ -100,14 +101,21 @@ function registerCommands(
             COMMANDS.TOGGLE_COLOR_PICKER,
             async () => {
                 const config = configLoader.getConfig();
-                await configLoader.updateConfig(
-                    'general', 
-                    'enableColourPicker', 
-                    !config.general.enableColourPicker
-                );
+                const newValue = !config.general.enableColourPicker;
+                await configLoader.updateConfig('general', 'enableColourPicker', newValue);
+                
+                await vscode.workspace.getConfiguration('editor', null)
+                    .update('colorDecorators', newValue, vscode.ConfigurationTarget.Global);
+                
+                if (vscode.window.activeTextEditor) {
+                    vscode.commands.executeCommand('editor.action.triggerSuggest');
+                    setTimeout(() => {
+                        vscode.commands.executeCommand('editor.action.cancelSuggest');
+                    }, 100);
+                }
                 
                 vscode.window.showInformationMessage(
-                    `Normal Colour Picker ${config.general.enableColourPicker ? 'enabled' : 'disabled'}`
+                    `VS Code Colour Picker ${newValue ? 'enabled' : 'disabled'}`
                 );
             }
         )
