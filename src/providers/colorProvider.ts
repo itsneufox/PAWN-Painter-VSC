@@ -12,15 +12,9 @@ export class ColorProvider implements vscode.DocumentColorProvider {
     ): vscode.ProviderResult<vscode.ColorInformation[]> {
         const config = this.configLoader.getConfig();
         
-        console.log(`PAWN Painter: Color picker enabled: ${config.general.enableColourPicker}`);
-        
         if (!config.general.enableColourPicker) {
-            console.log('PAWN Painter: Color picker disabled, returning empty array');
             return [];
         }
-    
-        console.log('PAWN Painter: Color picker enabled, providing colors');
-    
 
         const colorRanges: vscode.ColorInformation[] = [];
         const text = document.getText();
