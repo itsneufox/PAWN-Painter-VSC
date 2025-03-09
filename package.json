@@ -1,7 +1,7 @@
 {
   "name": "pawn-painter",
   "displayName": "PAWN Painter",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "Colour picker for open.mp and SA-MP",
   "publisher": "itsneufox",
   "icon": "images/icon.png",
@@ -108,6 +108,11 @@
       {
         "command": "pawnpainter.showIgnoredLines",
         "title": "History Of All Ignored Lines",
+        "category": "PAWN Painter"
+      },
+      {
+        "command": "pawnpainter.resetGuideState",
+        "title": "Reset Guide State (Show Guide on Next Restart)",
         "category": "PAWN Painter"
       }
     ],

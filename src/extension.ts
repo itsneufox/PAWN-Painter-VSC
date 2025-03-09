@@ -59,6 +59,13 @@ function registerCommands(
     updateService: UpdateService
 ): void {
     context.subscriptions.push(
+        vscode.commands.registerCommand('pawnpainter.resetGuideState', async () => {
+          await context.globalState.update('pawnpainter.lastVersion', undefined);
+          vscode.window.showInformationMessage('PAWN Painter guide will be shown on next restart.');
+        })
+      );
+
+    context.subscriptions.push(
         updateService.registerCommand(
             COMMANDS.TOGGLE_HEX_COLOR,
             async () => {
