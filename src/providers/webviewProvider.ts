@@ -1489,35 +1489,33 @@ to {
 }
 }
 </style>
-
 <script>
-  <script>
-      const vscode = acquireVsCodeApi();
-      
-      document.getElementById('closeButton').addEventListener('click', () => {
-          vscode.postMessage({ type: 'close' });
-      });
+    const vscode = acquireVsCodeApi();
+    
+    document.getElementById('closeButton').addEventListener('click', () => {
+        vscode.postMessage({ type: 'close' });
+    });
 
-      function openTab(tabName) {
-          const tabContents = document.getElementsByClassName('tab-pane');
-          for (let i = 0; i < tabContents.length; i++) {
-              tabContents[i].classList.remove('active');
-          }
+    function openTab(tabName) {
+        const tabContents = document.getElementsByClassName('tab-pane');
+        for (let i = 0; i < tabContents.length; i++) {
+            tabContents[i].classList.remove('active');
+        }
 
-          const tabButtons = document.getElementsByClassName('tab-button');
-          for (let i = 0; i < tabButtons.length; i++) {
-              tabButtons[i].classList.remove('active');
-          }
+        const tabButtons = document.getElementsByClassName('tab-button');
+        for (let i = 0; i < tabButtons.length; i++) {
+            tabButtons[i].classList.remove('active');
+        }
 
-          document.getElementById(tabName).classList.add('active');
+        document.getElementById(tabName).classList.add('active');
 
-          const buttons = document.querySelectorAll('.tab-button');
-          buttons.forEach(button => {
-              if (button.getAttribute('onclick').includes(tabName)) {
-                  button.classList.add('active');
-              }
-          });
-      }
+        const buttons = document.querySelectorAll('.tab-button');
+        buttons.forEach(button => {
+            if (button.getAttribute('onclick').includes(tabName)) {
+                button.classList.add('active');
+            }
+        });
+    }
 </script>
     </body>
 </html>`;
