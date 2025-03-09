@@ -6,7 +6,8 @@ export const EXTENSION = {
 
 export const COMMANDS = {
     TOGGLE_HEX_COLOR: 'pawnpainter.toggleHexColourHighlight',
-    TOGGLE_INLINE_COLORS: 'pawnpainter.toggleInlineColours',
+    TOGGLE_INLINE_CODE_COLORS: 'pawnpainter.toggleInlineCodeColours',
+    TOGGLE_INLINE_TEXT_COLORS: 'pawnpainter.toggleInlineTextColours',
     TOGGLE_GAMETEXT_COLORS: 'pawnpainter.toggleGameTextColorPicker',
     TOGGLE_COLOR_PICKER: 'pawnpainter.toggleNormalColorPicker'
 };

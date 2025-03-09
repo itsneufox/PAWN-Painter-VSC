@@ -41,7 +41,8 @@ export class ConfigurationLoader {
                 style: vsConfig.get('gameText.style', DEFAULT_CONFIG.gameText.style)
             },
             inlineText: {
-                enabled: vsConfig.get('inlineText.enabled', DEFAULT_CONFIG.inlineText.enabled),
+                codeEnabled: vsConfig.get('inlineText.codeEnabled', DEFAULT_CONFIG.inlineText.codeEnabled),
+                textEnabled: vsConfig.get('inlineText.textEnabled', DEFAULT_CONFIG.inlineText.textEnabled),
                 codeStyle: vsConfig.get('inlineText.codeStyle', DEFAULT_CONFIG.inlineText.codeStyle),
                 textStyle: vsConfig.get('inlineText.textStyle', DEFAULT_CONFIG.inlineText.textStyle)
             }

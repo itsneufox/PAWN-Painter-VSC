@@ -78,25 +78,6 @@ function registerCommands(
 
     context.subscriptions.push(
         updateService.registerCommand(
-            COMMANDS.TOGGLE_INLINE_COLORS,
-            async () => {
-                const config = configLoader.getConfig();
-                await configLoader.updateConfig('inlineText', 'enabled', !config.inlineText.enabled);
-                
-                const editor = vscode.window.activeTextEditor;
-                if (editor) {
-                    updateService.updateAllDecorations(editor);
-                }
-                
-                vscode.window.showInformationMessage(
-                    `Inline Colour Highlighting ${config.inlineText.enabled ? 'enabled' : 'disabled'}`
-                );
-            }
-        )
-    );
-
-    context.subscriptions.push(
-        updateService.registerCommand(
             COMMANDS.TOGGLE_GAMETEXT_COLORS,
             async () => {
                 const config = configLoader.getConfig();
@@ -127,6 +108,44 @@ function registerCommands(
                 
                 vscode.window.showInformationMessage(
                     `Normal Colour Picker ${config.general.enableColourPicker ? 'enabled' : 'disabled'}`
+                );
+            }
+        )
+    );
+
+    context.subscriptions.push(
+        updateService.registerCommand(
+            COMMANDS.TOGGLE_INLINE_CODE_COLORS,
+            async () => {
+                const config = configLoader.getConfig();
+                await configLoader.updateConfig('inlineText', 'codeEnabled', !config.inlineText.codeEnabled);
+                
+                const editor = vscode.window.activeTextEditor;
+                if (editor) {
+                    updateService.updateAllDecorations(editor);
+                }
+                
+                vscode.window.showInformationMessage(
+                    `Inline Code Colour Highlighting ${config.inlineText.codeEnabled ? 'enabled' : 'disabled'}`
+                );
+            }
+        )
+    );
+    
+    context.subscriptions.push(
+        updateService.registerCommand(
+            COMMANDS.TOGGLE_INLINE_TEXT_COLORS,
+            async () => {
+                const config = configLoader.getConfig();
+                await configLoader.updateConfig('inlineText', 'textEnabled', !config.inlineText.textEnabled);
+                
+                const editor = vscode.window.activeTextEditor;
+                if (editor) {
+                    updateService.updateAllDecorations(editor);
+                }
+                
+                vscode.window.showInformationMessage(
+                    `Inline Text Colour Highlighting ${config.inlineText.textEnabled ? 'enabled' : 'disabled'}`
                 );
             }
         )

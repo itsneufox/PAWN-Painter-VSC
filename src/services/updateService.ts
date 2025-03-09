@@ -96,9 +96,10 @@ export class UpdateService {
             'hex.showAlphaWarnings',
             'gameText.enabled',
             'gameText.style',
-            'inlineText.enabled',
+            'inlineText.codeEnabled',
+            'inlineText.textEnabled',
             'inlineText.codeStyle',
-            'inlineText.style'
+            'inlineText.textStyle'
         ];
 
         return relevantSettings.some(setting => 

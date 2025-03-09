@@ -4,6 +4,7 @@ import { DecorationStyle } from '../configurations/config';
 import { ViewportManager } from '../models/viewport';
 import { ConfigurationLoader } from '../configurations/configLoader';
 import { ColorParser } from './colorParser';
+import { ExtensionConfig } from '../configurations/config';
 import { ColorUtils } from '../utils/colorUtils';
 import { FunctionUtils } from '../utils/functionUtils';
 import { REGEX_PATTERNS } from '../constants';
@@ -179,54 +180,56 @@ export class DecorationManagerService {
 
     public updateInlineColorDecorations(editor: vscode.TextEditor): void {
         const config = this.configLoader.getConfig();
-        if (!config.inlineText.enabled || !editor) {
+
+        if ((!config.inlineText.codeEnabled && !config.inlineText.textEnabled) || !editor) {
             this.clearInlineColorDecorations(editor);
             return;
         }
-
+    
         const viewport = ViewportManager.getVisibleRangeWithBuffer(editor);
         const viewportText = ViewportManager.getViewportText(editor, viewport);
         const absoluteStart = ViewportManager.getAbsoluteOffset(editor, viewport);
-
+    
         this.decorationManager.disposeInlineColorDecorations();
         const decorationsMap = new Map<string, vscode.DecorationOptions[]>();
-
-        // Process only content inside quotes
+    
         const quotedTextRegex = /"[^"]*"/g;
         let quotedMatch;
-
+    
         while ((quotedMatch = quotedTextRegex.exec(viewportText)) !== null) {
             const quotedContent = quotedMatch[0];
             const quotedStart = quotedMatch.index!;
             
             const colourTagRegex = /\{([0-9A-Fa-f]{6})\}/g;
             let colorMatch;
-
+    
             while ((colorMatch = colourTagRegex.exec(quotedContent)) !== null) {
                 const colorStart = absoluteStart + quotedStart + colorMatch.index;
                 const range = new vscode.Range(
                     editor.document.positionAt(colorStart),
                     editor.document.positionAt(colorStart + colorMatch[0].length)
                 );
-
+    
                 const manager = IgnoredLinesManager.getInstance();
                 if (manager.isLineIgnored(editor.document.uri.fsPath, range.start.line)) {
                     continue;
                 }
-
+    
                 if (ViewportManager.isWithinViewport(range, viewport)) {
+                    // Update this line to pass the config parameter
                     this.processAndApplyInlineColor(
                         colorMatch[1],
                         range,
                         editor.document,
                         decorationsMap,
                         config.inlineText.codeStyle,
-                        config.inlineText.textStyle
+                        config.inlineText.textStyle,
+                        config.inlineText
                     );
                 }
             }
         }
-
+    
         decorationsMap.forEach((decorations, colorKey) => {
             const decorationType = this.decorationManager.getInlineColorDecoration(colorKey);
             if (decorationType) {
@@ -407,64 +410,74 @@ export class DecorationManagerService {
         editor: vscode.TextDocument,
         decorationsMap: Map<string, vscode.DecorationOptions[]>,
         codeStyle: DecorationStyle,
-        textStyle: DecorationStyle
+        textStyle: DecorationStyle,
+        config: ExtensionConfig['inlineText']
     ) {
+        // Parse the color from the color code (without the braces)
         const parseResult = this.colorParser.parseColor(`{${colorCode}}`);
         if (!parseResult) return;
     
         const color = parseResult.color;
         const colorKey = this.colorUtils.colorToHexWithAlpha(color);
     
-        // Apply style to the color code
-        const codeKey = `${colorKey}_code`;
-        if (!decorationsMap.has(codeKey)) {
-            decorationsMap.set(codeKey, []);
-            const decorationType = vscode.window.createTextEditorDecorationType(
-                this.decorationManager.createDecorationFromStyle(color, codeStyle)
-            );
-            this.decorationManager.setInlineColorDecoration(codeKey, decorationType);
-        }
-        decorationsMap.get(codeKey)!.push({ range });
-    
-        // Find the text after the color code until next color code or quote
-        const lineText = editor.lineAt(range.end.line).text;
-        const startPos = range.end.character;
-        let endPos = lineText.length;
-    
-        // Look for next color code or closing quote
-        const nextColorIndex = lineText.indexOf('{', startPos);
-        const nextQuoteIndex = lineText.indexOf('"', startPos);
-    
-        if (nextColorIndex !== -1) {
-            endPos = nextColorIndex;
-        }
-        if (nextQuoteIndex !== -1 && nextQuoteIndex < endPos) {
-            endPos = nextQuoteIndex;
-        }
-    
-        // Create range for the text
-        const textRange = new vscode.Range(
-            range.end,
-            new vscode.Position(range.end.line, endPos)
-        );
-    
-        // Apply style to the text if it's not empty
-        if (endPos > startPos) {
-            const textKey = `${colorKey}_text`;
-            if (!decorationsMap.has(textKey)) {
-                decorationsMap.set(textKey, []);
+        // Part 1: Handle the color code itself (e.g., {FFFFFF})
+        if (config.codeEnabled) {
+            const codeKey = `${colorKey}_code`;
+            if (!decorationsMap.has(codeKey)) {
+                decorationsMap.set(codeKey, []);
                 const decorationType = vscode.window.createTextEditorDecorationType(
-                    this.decorationManager.createDecorationFromStyle(color, textStyle)
+                    this.decorationManager.createDecorationFromStyle(color, codeStyle)
                 );
-                this.decorationManager.setInlineColorDecoration(textKey, decorationType);
+                this.decorationManager.setInlineColorDecoration(codeKey, decorationType);
             }
-            decorationsMap.get(textKey)!.push({ range: textRange });
+            decorationsMap.get(codeKey)!.push({ range });
+        }
+    
+        // Part 2: Handle the text that follows the color code
+        if (config.textEnabled) {
+            // Find the text after the color code until next color code or closing quote
+            const lineText = editor.lineAt(range.end.line).text;
+            const startPos = range.end.character;
+            let endPos = lineText.length;
+    
+            // Determine where this colored text section ends
+            const nextColorIndex = lineText.indexOf('{', startPos);
+            const nextQuoteIndex = lineText.indexOf('"', startPos);
+    
+            // Set the end position to the earlier of next color code or closing quote
+            if (nextColorIndex !== -1) {
+                endPos = nextColorIndex;
+            }
+            if (nextQuoteIndex !== -1 && nextQuoteIndex < endPos) {
+                endPos = nextQuoteIndex;
+            }
+    
+            // Create a range for the text to be colored
+            const textRange = new vscode.Range(
+                range.end,
+                new vscode.Position(range.end.line, endPos)
+            );
+    
+            // Only apply coloring if there's actual text to color
+            if (endPos > startPos) {
+                const textKey = `${colorKey}_text`;
+                if (!decorationsMap.has(textKey)) {
+                    decorationsMap.set(textKey, []);
+                    const decorationType = vscode.window.createTextEditorDecorationType(
+                        this.decorationManager.createDecorationFromStyle(color, textStyle)
+                    );
+                    this.decorationManager.setInlineColorDecoration(textKey, decorationType);
+                }
+                decorationsMap.get(textKey)!.push({ range: textRange });
+            }
         }
     }
 
     private clearGameTextDecorations(editor: vscode.TextEditor): void {
         Object.values(this.decorationManager.getAllGameTextDecorations()).forEach(decoration => {
             editor.setDecorations(decoration, []);
+
+            this.decorationManager.disposeGameTextDecorations();
         });
     }
 
@@ -472,11 +485,15 @@ export class DecorationManagerService {
         Array.from(this.decorationManager.getHexColorDecorations().values()).forEach(decoration => {
             editor.setDecorations(decoration, []);
         });
+
+        this.decorationManager.disposeHexColorDecorations();
     }
 
     private clearInlineColorDecorations(editor: vscode.TextEditor): void {
         Array.from(this.decorationManager.getInlineColorDecorations().values()).forEach(decoration => {
             editor.setDecorations(decoration, []);
         });
+
+        this.decorationManager.disposeInlineColorDecorations();
     }
 }

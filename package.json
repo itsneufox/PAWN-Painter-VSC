@@ -81,11 +81,6 @@
         "category": "PAWN Painter"
       },
       {
-        "command": "pawnpainter.toggleInlineColours",
-        "title": "Toggle Inline Colour Highlighting",
-        "category": "PAWN Painter"
-      },
-      {
         "command": "pawnpainter.toggleGameTextColorPicker",
         "title": "Toggle GameText Colour Preview",
         "category": "PAWN Painter"
@@ -101,9 +96,9 @@
         "category": "PAWN Painter"
       },
       {
-          "command": "pawnpainter.unignoreLine",
-          "title": "Restore Colour To Selected Line(s)",
-          "category": "PAWN Painter"
+        "command": "pawnpainter.unignoreLine",
+        "title": "Restore Colour To Selected Line(s)",
+        "category": "PAWN Painter"
       },
       {
         "command": "pawnpainter.clearIgnoredLines",
@@ -114,7 +109,7 @@
         "command": "pawnpainter.showIgnoredLines",
         "title": "History Of All Ignored Lines",
         "category": "PAWN Painter"
-    }
+      }
     ],
     "menus": {
       "editor/context": [
@@ -184,11 +179,17 @@
           "description": "Choose how GameText colours should be displayed.",
           "order": 6
         },
-        "pawnpainter.inlineText.enabled": {
+        "pawnpainter.inlineText.codeEnabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable colour highlighting for inline colours ({RRGGBB}).",
+          "description": "Enable highlighting for the inline colour codes ({RRGGBB}).",
           "order": 7
+        },
+        "pawnpainter.inlineText.textEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable highlighting for text following inline colour codes.",
+          "order": 8
         },
         "pawnpainter.inlineText.codeStyle": {
           "type": "string",
@@ -199,7 +200,7 @@
           ],
           "default": "underline",
           "description": "Choose how the inline colour code itself ({RRGGBB}) should be displayed.",
-          "order": 8
+          "order": 9
         },
         "pawnpainter.inlineText.textStyle": {
           "type": "string",
@@ -210,7 +211,7 @@
           ],
           "default": "text",
           "description": "Choose how text following an inline colour should be displayed.",
-          "order": 9
+          "order": 10
         }
       }
     }
