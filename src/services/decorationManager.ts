@@ -166,11 +166,15 @@ export class DecorationManagerService {
             }
         }
         
-        // Check if there's a closing quote after our position
         if (inQuotes) {
+            let escaping = false;
             for (let i = position; i < line.length; i++) {
-                if (line[i] === '"' && line[i-1] !== '\\') {
+                if (line[i] === '\\' && !escaping) {
+                    escaping = true;
+                } else if (line[i] === '"' && !escaping) {
                     return true;
+                } else {
+                    escaping = false;
                 }
             }
         }
@@ -180,46 +184,48 @@ export class DecorationManagerService {
 
     public updateInlineColorDecorations(editor: vscode.TextEditor): void {
         const config = this.configLoader.getConfig();
-
+    
         if ((!config.inlineText.codeEnabled && !config.inlineText.textEnabled) || !editor) {
             this.clearInlineColorDecorations(editor);
             return;
         }
     
         const viewport = ViewportManager.getVisibleRangeWithBuffer(editor);
-        const viewportText = ViewportManager.getViewportText(editor, viewport);
-        const absoluteStart = ViewportManager.getAbsoluteOffset(editor, viewport);
-    
-        this.decorationManager.disposeInlineColorDecorations();
+        const documentText = editor.document.getText();
         const decorationsMap = new Map<string, vscode.DecorationOptions[]>();
-    
-        const quotedTextRegex = /"[^"]*"/g;
+
+        this.decorationManager.disposeInlineColorDecorations();
+        
+        const quotedTextRegex = /"([^"\\]*(?:\\.[^"\\]*)*)"/g;
         let quotedMatch;
     
-        while ((quotedMatch = quotedTextRegex.exec(viewportText)) !== null) {
+        while ((quotedMatch = quotedTextRegex.exec(documentText)) !== null) {
             const quotedContent = quotedMatch[0];
-            const quotedStart = quotedMatch.index!;
+            const quotedStartOffset = quotedMatch.index;
+            const quotedStartPos = editor.document.positionAt(quotedStartOffset);
             
-            const colourTagRegex = /\{([0-9A-Fa-f]{6})\}/g;
+            const colorTagRegex = /\{([0-9A-Fa-f]{6})\}/g;
             let colorMatch;
+            let colorTagContent = quotedContent;
     
-            while ((colorMatch = colourTagRegex.exec(quotedContent)) !== null) {
-                const colorStart = absoluteStart + quotedStart + colorMatch.index;
-                const range = new vscode.Range(
-                    editor.document.positionAt(colorStart),
-                    editor.document.positionAt(colorStart + colorMatch[0].length)
+            while ((colorMatch = colorTagRegex.exec(colorTagContent)) !== null) {
+                const colorTagStartOffset = quotedStartOffset + colorMatch.index;
+                const colorTagPos = editor.document.positionAt(colorTagStartOffset);
+                const colorTagRange = new vscode.Range(
+                    colorTagPos,
+                    editor.document.positionAt(colorTagStartOffset + colorMatch[0].length)
                 );
-    
+                
+                // Skip if line is ignored
                 const manager = IgnoredLinesManager.getInstance();
-                if (manager.isLineIgnored(editor.document.uri.fsPath, range.start.line)) {
+                if (manager.isLineIgnored(editor.document.uri.fsPath, colorTagRange.start.line)) {
                     continue;
                 }
-    
-                if (ViewportManager.isWithinViewport(range, viewport)) {
-                    // Update this line to pass the config parameter
+                
+                if (ViewportManager.isWithinViewport(colorTagRange, viewport)) {
                     this.processAndApplyInlineColor(
                         colorMatch[1],
-                        range,
+                        colorTagRange,
                         editor.document,
                         decorationsMap,
                         config.inlineText.codeStyle,
@@ -229,7 +235,6 @@ export class DecorationManagerService {
                 }
             }
         }
-    
         decorationsMap.forEach((decorations, colorKey) => {
             const decorationType = this.decorationManager.getInlineColorDecoration(colorKey);
             if (decorationType) {
@@ -440,9 +445,15 @@ export class DecorationManagerService {
             const startPos = range.end.character;
             let endPos = lineText.length;
     
-            // Determine where this colored text section ends
             const nextColorIndex = lineText.indexOf('{', startPos);
-            const nextQuoteIndex = lineText.indexOf('"', startPos);
+
+            let nextQuoteIndex = -1;
+            for (let i = startPos; i < lineText.length; i++) {
+                if (lineText[i] === '"' && (i === 0 || lineText[i-1] !== '\\')) {
+                    nextQuoteIndex = i;
+                    break;
+                }
+            }
     
             // Set the end position to the earlier of next color code or closing quote
             if (nextColorIndex !== -1) {
