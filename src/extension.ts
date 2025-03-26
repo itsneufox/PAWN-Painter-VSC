@@ -13,7 +13,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const updateService = UpdateService.getInstance();
     const colorProvider = new ColorProvider();
     
-    await WebviewProvider.checkVersionAndShowSplash(context);
+    await WebviewProvider.checkVersionAndShowNotification(context);
     updateService.initialize(context);
     registerIgnoredLinesCommands(context);
 
@@ -60,10 +60,10 @@ function registerCommands(
 ): void {
     context.subscriptions.push(
         vscode.commands.registerCommand('pawnpainter.resetGuideState', async () => {
-          await context.globalState.update('pawnpainter.lastVersion', undefined);
-          vscode.window.showInformationMessage('PAWN Painter guide will be shown on next restart.');
+            await context.globalState.update('pawnpainter.lastVersion', undefined);
+            vscode.window.showInformationMessage('PAWN Painter notification will be shown on next restart.');
         })
-      );
+    );
 
     context.subscriptions.push(
         updateService.registerCommand(
