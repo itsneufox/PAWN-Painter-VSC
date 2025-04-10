@@ -16,7 +16,6 @@ export class IgnoredLinesManager {
     private _onLinesChanged: vscode.EventEmitter<void>;
     private disposables: vscode.Disposable[] = [];
     public readonly onLinesChanged: vscode.Event<void>;
-    
 
     private constructor(context: vscode.ExtensionContext) {
         this.context = context;
@@ -26,9 +25,9 @@ export class IgnoredLinesManager {
 
         // Document change listener
         this.disposables.push(
-            vscode.workspace.onDidChangeTextDocument(e => {
+            vscode.workspace.onDidChangeTextDocument((e) => {
                 this.handleDocumentChange(e);
-            })
+            }),
         );
     }
 
@@ -37,7 +36,7 @@ export class IgnoredLinesManager {
         if (!this.ignoredLines.has(filePath)) {
             return;
         }
-    
+
         // Process each change event
         for (const change of e.contentChanges) {
             const startLine = change.range.start.line;
@@ -45,31 +44,31 @@ export class IgnoredLinesManager {
             const addedLines = change.text.split('\n').length - 1;
             const removedLines = endLine - startLine;
             const lineDelta = addedLines - removedLines;
-    
+
             if (lineDelta !== 0) {
                 this.updateLineNumbers(filePath, startLine, lineDelta);
             }
         }
     }
-    
+
     private updateLineNumbers(filePath: string, startLine: number, lineDelta: number): void {
         const lineSet = this.ignoredLines.get(filePath);
         if (!lineSet) return;
-    
+
         // Create new set for updated line numbers
         const newLineSet = new Set<number>();
-        
+
         // Update line details
-        this.lineDetails = this.lineDetails.map(detail => {
+        this.lineDetails = this.lineDetails.map((detail) => {
             if (detail.filePath === filePath && detail.line > startLine) {
                 return {
                     ...detail,
-                    line: detail.line + lineDelta
+                    line: detail.line + lineDelta,
                 };
             }
             return detail;
         });
-    
+
         // Update line set
         for (const line of lineSet) {
             if (line > startLine) {
@@ -78,7 +77,7 @@ export class IgnoredLinesManager {
                 newLineSet.add(line);
             }
         }
-    
+
         this.ignoredLines.set(filePath, newLineSet);
         this.saveIgnoredLines();
     }
@@ -91,9 +90,12 @@ export class IgnoredLinesManager {
     }
 
     private async loadIgnoredLines(): Promise<void> {
-        const savedLines = this.context.globalState.get<IgnoredLine[]>('pawnpainter.ignoredLines', []);
+        const savedLines = this.context.globalState.get<IgnoredLine[]>(
+            'pawnpainter.ignoredLines',
+            [],
+        );
         this.lineDetails = savedLines;
-        
+
         this.ignoredLines.clear();
         for (const line of savedLines) {
             if (!this.ignoredLines.has(line.filePath)) {
@@ -101,7 +103,7 @@ export class IgnoredLinesManager {
             }
             this.ignoredLines.get(line.filePath)!.add(line.line);
         }
-        
+
         this._onLinesChanged.fire();
     }
 
@@ -116,37 +118,41 @@ export class IgnoredLinesManager {
 
     public async removeIgnoredLines(filePath: string, lines: number[]): Promise<void> {
         if (!this.ignoredLines.has(filePath)) return;
-        
+
         const lineSet = this.ignoredLines.get(filePath)!;
-        lines.forEach(line => {
+        lines.forEach((line) => {
             if (line >= 0) {
                 lineSet.delete(line);
             }
         });
-        
+
         this.lineDetails = this.lineDetails.filter(
-            detail => !(detail.filePath === filePath && lines.includes(detail.line))
+            (detail) => !(detail.filePath === filePath && lines.includes(detail.line)),
         );
-        
+
         if (lineSet.size === 0) {
             this.ignoredLines.delete(filePath);
         }
-        
+
         await this.saveIgnoredLines();
         this.refreshDecorations();
     }
 
-    public async addIgnoredLines(filePath: string, lines: number[], contents: string[]): Promise<void> {
+    public async addIgnoredLines(
+        filePath: string,
+        lines: number[],
+        contents: string[],
+    ): Promise<void> {
         if (!this.ignoredLines.has(filePath)) {
             this.ignoredLines.set(filePath, new Set());
         }
-        
+
         const lineSet = this.ignoredLines.get(filePath)!;
         const timestamp = Date.now();
-        
+
         lines.forEach((line, index) => {
             if (line < 0) return; // Skip invalid line numbers
-            
+
             const content = contents[index].trim();
             if (content && !lineSet.has(line)) {
                 lineSet.add(line);
@@ -154,11 +160,11 @@ export class IgnoredLinesManager {
                     filePath,
                     line,
                     content,
-                    timestamp
+                    timestamp,
                 });
             }
         });
-        
+
         await this.saveIgnoredLines();
         this.refreshDecorations();
     }
@@ -173,19 +179,19 @@ export class IgnoredLinesManager {
         await this.saveIgnoredLines();
         this.refreshDecorations();
     }
-    
-    private refreshDecorations() {
+
+    private refreshDecorations(): void {
         const updateService = UpdateService.getInstance();
         vscode.window.visibleTextEditors
-            .filter(editor => editor.document.languageId === 'pawn')
-            .forEach(editor => {
+            .filter((editor) => editor.document.languageId === 'pawn')
+            .forEach((editor) => {
                 updateService.updateAllDecorations(editor);
             });
     }
-    
-    public dispose() {
+
+    public dispose(): void {
         this._onLinesChanged.dispose();
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
         this.disposables = [];
     }
 }

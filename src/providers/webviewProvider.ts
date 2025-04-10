@@ -13,12 +13,14 @@ export class WebviewProvider {
         const last = this.parseVersion(lastVersion);
 
         // Show notification for major or minor version changes
-        return current.major > last.major || 
-               (current.major === last.major && current.minor > last.minor);
+        return (
+            current.major > last.major ||
+            (current.major === last.major && current.minor > last.minor)
+        );
     }
 
     public static async checkVersionAndShowNotification(
-        context: vscode.ExtensionContext
+        context: vscode.ExtensionContext,
     ): Promise<void> {
         const extension = vscode.extensions.getExtension('itsneufox.pawn-painter');
         if (!extension) {
@@ -29,7 +31,10 @@ export class WebviewProvider {
         const lastVersion = context.globalState.get<string>(WebviewProvider.VERSION_KEY);
         const isFirstInstall = !lastVersion;
 
-        if (isFirstInstall || (lastVersion && this.isSignificantUpdate(currentVersion, lastVersion))) {
+        if (
+            isFirstInstall ||
+            (lastVersion && this.isSignificantUpdate(currentVersion, lastVersion))
+        ) {
             await this.showUpdateNotification(currentVersion);
             await context.globalState.update(WebviewProvider.VERSION_KEY, currentVersion);
         }
@@ -39,11 +44,13 @@ export class WebviewProvider {
         const result = await vscode.window.showInformationMessage(
             `PAWN Painter has been updated to v${version} with new features. Check it out!`,
             'View on GitHub',
-            'Visit Website'
+            'Visit Website',
         );
 
         if (result === 'View on GitHub') {
-            vscode.env.openExternal(vscode.Uri.parse('https://github.com/itsneufox/PAWN-Painter-VSC'));
+            vscode.env.openExternal(
+                vscode.Uri.parse('https://github.com/itsneufox/PAWN-Painter-VSC'),
+            );
         } else if (result === 'Visit Website') {
             // Replace with your actual website URL
             vscode.env.openExternal(vscode.Uri.parse('https://itsneufox.xyz/#/pawnpainter'));

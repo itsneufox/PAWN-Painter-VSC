@@ -11,14 +11,14 @@ export function registerIgnoredLinesCommands(context: vscode.ExtensionContext): 
                 'Are you sure you want to clear all ignored lines?',
                 { modal: true },
                 'Yes',
-                'No'
+                'No',
             );
-            
+
             if (confirmation === 'Yes') {
                 await manager.clearAllIgnoredLines();
                 vscode.window.showInformationMessage('All ignored lines have been cleared');
             }
-        })
+        }),
     );
 
     context.subscriptions.push(
@@ -31,7 +31,7 @@ export function registerIgnoredLinesCommands(context: vscode.ExtensionContext): 
             const lines: number[] = [];
             const contents: string[] = [];
 
-            selections.forEach(selection => {
+            selections.forEach((selection) => {
                 for (let i = selection.start.line; i <= selection.end.line; i++) {
                     lines.push(i);
                     contents.push(editor.document.lineAt(i).text);
@@ -39,8 +39,10 @@ export function registerIgnoredLinesCommands(context: vscode.ExtensionContext): 
             });
 
             await manager.addIgnoredLines(filePath, lines, contents);
-            vscode.window.showInformationMessage(`${lines.length} line(s) colour highlighting ignored`);
-        })
+            vscode.window.showInformationMessage(
+                `${lines.length} line(s) colour highlighting ignored`,
+            );
+        }),
     );
 
     context.subscriptions.push(
@@ -52,7 +54,7 @@ export function registerIgnoredLinesCommands(context: vscode.ExtensionContext): 
             const filePath = editor.document.uri.fsPath;
             const lines: number[] = [];
 
-            selections.forEach(selection => {
+            selections.forEach((selection) => {
                 for (let i = selection.start.line; i <= selection.end.line; i++) {
                     if (manager.isLineIgnored(filePath, i)) {
                         lines.push(i);
@@ -66,13 +68,15 @@ export function registerIgnoredLinesCommands(context: vscode.ExtensionContext): 
             }
 
             await manager.removeIgnoredLines(filePath, lines);
-            vscode.window.showInformationMessage(`${lines.length} line(s) colour highlighting restored`);
-        })
+            vscode.window.showInformationMessage(
+                `${lines.length} line(s) colour highlighting restored`,
+            );
+        }),
     );
 
     context.subscriptions.push(
         vscode.commands.registerCommand('pawnpainter.showIgnoredLines', () => {
             IgnoredLinesView.createOrShow(context);
-        })
+        }),
     );
 }

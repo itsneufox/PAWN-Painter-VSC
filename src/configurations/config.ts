@@ -23,21 +23,21 @@ export type DecorationStyle = 'text' | 'underline' | 'background';
 
 export const DEFAULT_CONFIG: ExtensionConfig = {
     general: {
-        enableColourPicker: true
+        enableColourPicker: true,
     },
     hex: {
         enabled: true,
         style: 'underline',
-        showAlphaWarnings: true
+        showAlphaWarnings: true,
     },
     gameText: {
         enabled: true,
-        style: 'text'
+        style: 'text',
     },
     inlineText: {
         codeEnabled: true,
         textEnabled: true,
         codeStyle: 'underline',
-        textStyle: 'text'
-    }
+        textStyle: 'text',
+    },
 };

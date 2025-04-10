@@ -8,10 +8,10 @@ export class ColorProvider implements vscode.DocumentColorProvider {
     private configLoader = ConfigurationLoader.getInstance();
 
     public provideDocumentColors(
-        document: vscode.TextDocument
+        document: vscode.TextDocument,
     ): vscode.ProviderResult<vscode.ColorInformation[]> {
         const config = this.configLoader.getConfig();
-        
+
         if (!config.general.enableColourPicker) {
             return [];
         }
@@ -47,13 +47,10 @@ export class ColorProvider implements vscode.DocumentColorProvider {
 
             const range = new vscode.Range(
                 startPos,
-                document.positionAt(match.index + match[0].length)
+                document.positionAt(match.index + match[0].length),
             );
 
-            colorRanges.push(new vscode.ColorInformation(
-                range,
-                new vscode.Color(r, g, b, a)
-            ));
+            colorRanges.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
         }
 
         // Match braced colors ({RRGGBB})
@@ -73,13 +70,10 @@ export class ColorProvider implements vscode.DocumentColorProvider {
 
             const range = new vscode.Range(
                 startPos,
-                document.positionAt(match.index + match[0].length)
+                document.positionAt(match.index + match[0].length),
             );
 
-            colorRanges.push(new vscode.ColorInformation(
-                range,
-                new vscode.Color(r, g, b, 1)
-            ));
+            colorRanges.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, 1)));
         }
 
         // Match RGB/RGBA values
@@ -96,22 +90,24 @@ export class ColorProvider implements vscode.DocumentColorProvider {
             // Process RGB values in TextDraw functions
             const functionName = this.functionUtils.getFunctionNameAtPosition(document, position);
             if (functionName?.match(/(?:Player)?TextDraw(?:Colour|Color)/)) {
-                const [_, r, g, b, a] = match;
+                const [r, g, b, a] = match;
                 if (parseInt(r) <= 255 && parseInt(g) <= 255 && parseInt(b) <= 255) {
                     const range = new vscode.Range(
                         startPos,
-                        document.positionAt(match.index + match[0].length)
+                        document.positionAt(match.index + match[0].length),
                     );
 
-                    colorRanges.push(new vscode.ColorInformation(
-                        range,
-                        new vscode.Color(
-                            parseInt(r) / 255,
-                            parseInt(g) / 255,
-                            parseInt(b) / 255,
-                            a ? parseInt(a) / 255 : 1
-                        )
-                    ));
+                    colorRanges.push(
+                        new vscode.ColorInformation(
+                            range,
+                            new vscode.Color(
+                                parseInt(r) / 255,
+                                parseInt(g) / 255,
+                                parseInt(b) / 255,
+                                a ? parseInt(a) / 255 : 1,
+                            ),
+                        ),
+                    );
                 }
             }
         }
@@ -121,7 +117,7 @@ export class ColorProvider implements vscode.DocumentColorProvider {
 
     public provideColorPresentations(
         color: vscode.Color,
-        context: { document: vscode.TextDocument; range: vscode.Range }
+        context: { document: vscode.TextDocument; range: vscode.Range },
     ): vscode.ProviderResult<vscode.ColorPresentation[]> {
         const config = this.configLoader.getConfig();
 
@@ -130,12 +126,12 @@ export class ColorProvider implements vscode.DocumentColorProvider {
         }
 
         const manager = IgnoredLinesManager.getInstance();
-        
+
         // Skip if line is ignored
-        if (manager && manager.isLineIgnored(
-            context.document.uri.fsPath,
-            context.range.start.line
-        )) {
+        if (
+            manager &&
+            manager.isLineIgnored(context.document.uri.fsPath, context.range.start.line)
+        ) {
             return [];
         }
 
@@ -144,7 +140,7 @@ export class ColorProvider implements vscode.DocumentColorProvider {
         // Check if we're in a TextDraw function
         const functionName = this.functionUtils.getFunctionNameAtPosition(
             context.document,
-            context.range.start
+            context.range.start,
         );
 
         if (functionName?.match(/(?:Player)?TextDraw(?:Colour|Color)/)) {
@@ -160,7 +156,7 @@ export class ColorProvider implements vscode.DocumentColorProvider {
         const g = Math.round(color.green * 255);
         const b = Math.round(color.blue * 255);
         const hex = [r, g, b]
-            .map(n => n.toString(16).padStart(2, '0'))
+            .map((n) => n.toString(16).padStart(2, '0'))
             .join('')
             .toUpperCase();
 
@@ -169,7 +165,8 @@ export class ColorProvider implements vscode.DocumentColorProvider {
         }
 
         // Check if original had alpha
-        if (originalText.length === 10) { // 0xRRGGBBAA format
+        if (originalText.length === 10) {
+            // 0xRRGGBBAA format
             const a = Math.round(color.alpha * 255);
             const hexWithAlpha = hex + a.toString(16).padStart(2, '0').toUpperCase();
             return [new vscode.ColorPresentation(`0x${hexWithAlpha}`)];

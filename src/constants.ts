@@ -1,7 +1,7 @@
 export const EXTENSION = {
     ID: 'pawnpainter',
     PUBLISHER: 'itsneufox',
-    FULL_NAME: 'itsneufox.pawn-painter'
+    FULL_NAME: 'itsneufox.pawn-painter',
 };
 
 export const COMMANDS = {
@@ -9,26 +9,26 @@ export const COMMANDS = {
     TOGGLE_INLINE_CODE_COLORS: 'pawnpainter.toggleInlineCodeColours',
     TOGGLE_INLINE_TEXT_COLORS: 'pawnpainter.toggleInlineTextColours',
     TOGGLE_GAMETEXT_COLORS: 'pawnpainter.toggleGameTextColorPicker',
-    TOGGLE_COLOR_PICKER: 'pawnpainter.toggleNormalColorPicker'
+    TOGGLE_COLOR_PICKER: 'pawnpainter.toggleNormalColorPicker',
 };
 
 export const CONFIG_KEYS = {
     GENERAL: {
-        ENABLE_COLOR_PICKER: 'general.enableColourPicker'
+        ENABLE_COLOR_PICKER: 'general.enableColourPicker',
     },
     HEX: {
         ENABLED: 'hex.enabled',
         STYLE: 'hex.style',
-        SHOW_ALPHA_WARNINGS: 'hex.showAlphaWarnings'
+        SHOW_ALPHA_WARNINGS: 'hex.showAlphaWarnings',
     },
     GAME_TEXT: {
         ENABLED: 'gameText.enabled',
-        STYLE: 'gameText.style'
+        STYLE: 'gameText.style',
     },
     INLINE_TEXT: {
         ENABLED: 'inlineText.enabled',
-        STYLE: 'inlineText.style'
-    }
+        STYLE: 'inlineText.style',
+    },
 };
 
 export const REGEX_PATTERNS = {
@@ -38,38 +38,39 @@ export const REGEX_PATTERNS = {
     GAME_TEXT_COLOR: /~([rgbyplws])~(?:~h~)*/g,
     FUNCTION_CALL: /\b[A-Za-z_][A-Za-z0-9_]*\s*\(/,
     TEXT_DRAW_FUNCTION: /(?:Player)?TextDraw(?:Colour|Color)/,
-    COLOR_TAG: /\{([0-9A-Fa-f]{6})\}(.*?)(?=\{[0-9A-Fa-f]{6}\}|")/g
+    COLOR_TAG: /\{([0-9A-Fa-f]{6})\}(.*?)(?=\{[0-9A-Fa-f]{6}\}|")/g,
 };
 
 export const DECORATION_STYLES = {
     TEXT: 'text',
     UNDERLINE: 'underline',
-    BACKGROUND: 'background'
+    BACKGROUND: 'background',
 } as const;
 
 export const UI_MESSAGES = {
     TOGGLE_MESSAGES: {
-        HEX_COLOR: (enabled: boolean) => 
+        HEX_COLOR: (enabled: boolean): string =>
             `Hex Colour Highlighting ${enabled ? 'enabled' : 'disabled'}`,
-        INLINE_COLOR: (enabled: boolean) => 
+        INLINE_COLOR: (enabled: boolean): string =>
             `Inline Colour Highlighting ${enabled ? 'enabled' : 'disabled'}`,
-        GAME_TEXT: (enabled: boolean) => 
+        GAME_TEXT: (enabled: boolean): string =>
             `GameText Colour Preview ${enabled ? 'enabled' : 'disabled'}`,
-        COLOR_PICKER: (enabled: boolean) => 
-            `Normal Colour Picker ${enabled ? 'enabled' : 'disabled'}`
+        COLOR_PICKER: (enabled: boolean): string =>
+            `Normal Colour Picker ${enabled ? 'enabled' : 'disabled'}`,
     },
     WARNINGS: {
-        ZERO_ALPHA: "This colour has an alpha value of 00.\n" +
-                   "If it's intentional or you use bitwise operations,\n" +
-                   "you may disregard this message!"
-    }
+        ZERO_ALPHA:
+            'This colour has an alpha value of 00.\n' +
+            "If it's intentional or you use bitwise operations,\n" +
+            'you may disregard this message!',
+    },
 };
 
 export const STATE_KEYS = {
-    LAST_VERSION: 'pawnpainter.lastVersion'
+    LAST_VERSION: 'pawnpainter.lastVersion',
 };
 
 export const VIEWPORT = {
     BUFFER_SIZE: 200,
-    UPDATE_DELAY: 100
+    UPDATE_DELAY: 100,
 };

@@ -22,30 +22,30 @@ export class UpdateService {
 
     public initialize(context: vscode.ExtensionContext): void {
         this.disposables.push(
-            vscode.window.onDidChangeActiveTextEditor(editor => {
+            vscode.window.onDidChangeActiveTextEditor((editor) => {
                 if (editor) {
                     this.updateAllDecorations(editor);
                 }
             }),
 
-            vscode.workspace.onDidChangeTextDocument(event => {
+            vscode.workspace.onDidChangeTextDocument((event) => {
                 const editor = vscode.window.activeTextEditor;
                 if (editor && event.document === editor.document) {
                     this.updateAllDecorations(editor);
                 }
             }),
 
-            vscode.window.onDidChangeTextEditorVisibleRanges(event => {
+            vscode.window.onDidChangeTextEditorVisibleRanges((event) => {
                 if (event.textEditor) {
                     this.updateAllDecorations(event.textEditor);
                 }
             }),
 
-            vscode.workspace.onDidChangeConfiguration(e => {
+            vscode.workspace.onDidChangeConfiguration((e) => {
                 if (this.isRelevantConfigurationChange(e)) {
                     this.handleConfigurationChange();
                 }
-            })
+            }),
         );
 
         context.subscriptions.push(...this.disposables);
@@ -63,10 +63,10 @@ export class UpdateService {
         if (this.updateTimeout) {
             clearTimeout(this.updateTimeout);
         }
-    
+
         const now = Date.now();
         const timeSinceLastUpdate = now - this.lastUpdateTime;
-    
+
         if (timeSinceLastUpdate < this.MIN_UPDATE_INTERVAL) {
             this.updateTimeout = setTimeout(() => {
                 this.performUpdate(editor);
@@ -99,26 +99,28 @@ export class UpdateService {
             'inlineText.codeEnabled',
             'inlineText.textEnabled',
             'inlineText.codeStyle',
-            'inlineText.textStyle'
+            'inlineText.textStyle',
         ];
 
-        return relevantSettings.some(setting => 
-            e.affectsConfiguration(`pawnpainter.${setting}`)
-        );
+        return relevantSettings.some((setting) => e.affectsConfiguration(`pawnpainter.${setting}`));
     }
 
     private handleConfigurationChange(): void {
-
         const previousConfig = { ...this.configLoader.getConfig() };
-        
+
         this.configLoader.loadConfiguration();
         const newConfig = this.configLoader.getConfig();
-        
+
         if (previousConfig.general.enableColourPicker !== newConfig.general.enableColourPicker) {
-            vscode.workspace.getConfiguration('editor', null)
-                .update('colorDecorators', newConfig.general.enableColourPicker, vscode.ConfigurationTarget.Global);
+            vscode.workspace
+                .getConfiguration('editor', null)
+                .update(
+                    'colorDecorators',
+                    newConfig.general.enableColourPicker,
+                    vscode.ConfigurationTarget.Global,
+                );
         }
-        
+
         const editor = vscode.window.activeTextEditor;
         if (editor) {
             this.updateAllDecorations(editor);
@@ -127,7 +129,7 @@ export class UpdateService {
 
     public registerCommand(
         command: string,
-        callback: (...args: any[]) => any
+        callback: (...args: unknown[]) => unknown,
     ): vscode.Disposable {
         const disposable = vscode.commands.registerCommand(command, callback);
         this.disposables.push(disposable);
@@ -135,7 +137,7 @@ export class UpdateService {
     }
 
     public dispose(): void {
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
         this.disposables = [];
     }
 }

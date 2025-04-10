@@ -15,33 +15,34 @@ export class ViewportManager {
             return {
                 startLine: 0,
                 endLine: 0,
-                buffer: this.DEFAULT_BUFFER_SIZE
+                buffer: this.DEFAULT_BUFFER_SIZE,
             };
         }
 
         const firstVisible = visibleRanges[0];
         const lastVisible = visibleRanges[visibleRanges.length - 1];
-        
+
         const startLine = Math.max(0, firstVisible.start.line - this.DEFAULT_BUFFER_SIZE);
         const endLine = lastVisible.end.line + this.DEFAULT_BUFFER_SIZE;
-        
+
         return {
             startLine,
             endLine,
-            buffer: this.DEFAULT_BUFFER_SIZE
+            buffer: this.DEFAULT_BUFFER_SIZE,
         };
     }
 
     public static isWithinViewport(range: vscode.Range, viewport: ViewportInfo): boolean {
-        return range.start.line >= viewport.startLine && 
-               range.end.line <= viewport.endLine;
+        return range.start.line >= viewport.startLine && range.end.line <= viewport.endLine;
     }
 
     public static getViewportText(editor: vscode.TextEditor, viewport: ViewportInfo): string {
-        return editor.document.getText(new vscode.Range(
-            new vscode.Position(viewport.startLine, 0),
-            new vscode.Position(viewport.endLine, Number.MAX_VALUE)
-        ));
+        return editor.document.getText(
+            new vscode.Range(
+                new vscode.Position(viewport.startLine, 0),
+                new vscode.Position(viewport.endLine, Number.MAX_VALUE),
+            ),
+        );
     }
 
     public static getAbsoluteOffset(editor: vscode.TextEditor, viewport: ViewportInfo): number {
@@ -51,7 +52,7 @@ export class ViewportManager {
     public static createRange(
         editor: vscode.TextEditor,
         absoluteStart: number,
-        length: number
+        length: number,
     ): vscode.Range {
         const startPos = editor.document.positionAt(absoluteStart);
         const endPos = editor.document.positionAt(absoluteStart + length);
