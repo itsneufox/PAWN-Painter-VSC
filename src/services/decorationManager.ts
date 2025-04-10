@@ -36,6 +36,11 @@ export class DecorationManagerService {
         for (const quotedMatch of quotedMatches) {
             const quotedContent = quotedMatch[0];
             const quotedStart = quotedMatch.index!;
+            const quotedPosition = editor.document.positionAt(absoluteStart + quotedStart);
+            
+            if (this.isInsideComment(editor.document, quotedPosition)) {
+                continue;
+            }
 
             const segments = this.processGameTextSegments(quotedContent);
             const absoluteQuoteStart = absoluteStart + quotedStart;
@@ -58,6 +63,25 @@ export class DecorationManagerService {
         });
     }
 
+    private isInsideComment(document: vscode.TextDocument, position: vscode.Position): boolean {
+        const lineText = document.lineAt(position.line).text;
+        
+        const commentIndex = lineText.indexOf('//');
+        if (commentIndex !== -1 && position.character > commentIndex) {
+            return true;
+        }
+        
+        const text = document.getText(new vscode.Range(
+            new vscode.Position(0, 0),
+            position
+        ));
+        
+        const openCount = (text.match(/\/\*/g) || []).length;
+        const closeCount = (text.match(/\*\//g) || []).length;
+        
+        return openCount > closeCount;
+    }
+
     public updateHexColorDecorations(editor: vscode.TextEditor): void {
         const config = this.configLoader.getConfig();
         if (!config.hex.enabled || !editor) {
@@ -77,6 +101,10 @@ export class DecorationManagerService {
         for (const hexMatch of hexMatches) {
             const colorCode = hexMatch[0];
             const position = editor.document.positionAt(absoluteStart + hexMatch.index!);
+
+            if (this.isInsideComment(editor.document, position)) {
+                continue;
+            }
 
             if (colorCode.startsWith('{')) {
                 const line = editor.document.lineAt(position.line).text;
@@ -123,6 +151,11 @@ export class DecorationManagerService {
                 (!a || this.colorUtils.isValidAlpha(parseInt(a)))
             ) {
                 const position = editor.document.positionAt(absoluteStart + rgbMatch.index!);
+                
+                if (this.isInsideComment(editor.document, position)) {
+                    continue;
+                }
+                
                 const functionName = this.functionUtils.getFunctionNameAtPosition(
                     editor.document,
                     position,
@@ -211,6 +244,11 @@ export class DecorationManagerService {
         while ((quotedMatch = quotedTextRegex.exec(documentText)) !== null) {
             const quotedContent = quotedMatch[0];
             const quotedStartOffset = quotedMatch.index;
+            const quotedPos = editor.document.positionAt(quotedStartOffset);
+            
+            if (this.isInsideComment(editor.document, quotedPos)) {
+                continue;
+            }
 
             const colorTagRegex = /\{([0-9A-Fa-f]{6})\}/g;
             let colorMatch;
@@ -219,12 +257,16 @@ export class DecorationManagerService {
             while ((colorMatch = colorTagRegex.exec(colorTagContent)) !== null) {
                 const colorTagStartOffset = quotedStartOffset + colorMatch.index;
                 const colorTagPos = editor.document.positionAt(colorTagStartOffset);
+                
+                if (this.isInsideComment(editor.document, colorTagPos)) {
+                    continue;
+                }
+                
                 const colorTagRange = new vscode.Range(
                     colorTagPos,
                     editor.document.positionAt(colorTagStartOffset + colorMatch[0].length),
                 );
 
-                // Skip if line is ignored
                 const manager = IgnoredLinesManager.getInstance();
                 if (manager.isLineIgnored(editor.document.uri.fsPath, colorTagRange.start.line)) {
                     continue;
@@ -325,6 +367,13 @@ export class DecorationManagerService {
                     segment.lightLevels,
                 );
                 if (!color) return;
+                
+                const position = editor.document.positionAt(absoluteStart + segment.startIndex);
+                
+                if (this.isInsideComment(editor.document, position)) {
+                    return;
+                }
+                
                 const range = ViewportManager.createRange(
                     editor,
                     absoluteStart + segment.startIndex,
