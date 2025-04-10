@@ -39,6 +39,8 @@ export const REGEX_PATTERNS = {
     FUNCTION_CALL: /\b[A-Za-z_][A-Za-z0-9_]*\s*\(/,
     TEXT_DRAW_FUNCTION: /(?:Player)?TextDraw(?:Colour|Color)/,
     COLOR_TAG: /\{([0-9A-Fa-f]{6})\}(.*?)(?=\{[0-9A-Fa-f]{6}\}|")/g,
+    SINGLE_LINE_COMMENT: /\/\/.*$/gm,
+    MULTI_LINE_COMMENT: /\/\*[\s\S]*?\*\//gm,
 };
 
 export const DECORATION_STYLES = {
