@@ -309,12 +309,42 @@ export class DecorationManagerService {
 
             if (matchIndex >= startOffset && matchIndex < endOffset) {
                 if (matchIndex > lastMatchEnd) {
-                    segments.push({
-                        text: text.slice(lastMatchEnd, matchIndex),
-                        startIndex: lastMatchEnd,
-                        colorChar: null,
-                        lightLevels: 0,
-                    });
+                    const beforeText = text.slice(lastMatchEnd, matchIndex);
+                    const newlineIndex = beforeText.indexOf('~n~');
+
+                    if (newlineIndex !== -1) {
+                        if (newlineIndex > 0) {
+                            segments.push({
+                                text: beforeText.slice(0, newlineIndex),
+                                startIndex: lastMatchEnd,
+                                colorChar: null,
+                                lightLevels: 0,
+                            });
+                        }
+
+                        segments.push({
+                            text: '~n~',
+                            startIndex: lastMatchEnd + newlineIndex,
+                            colorChar: null,
+                            lightLevels: 0,
+                        });
+
+                        if (newlineIndex + 3 < beforeText.length) {
+                            segments.push({
+                                text: beforeText.slice(newlineIndex + 3),
+                                startIndex: lastMatchEnd + newlineIndex + 3,
+                                colorChar: null,
+                                lightLevels: 0,
+                            });
+                        }
+                    } else {
+                        segments.push({
+                            text: beforeText,
+                            startIndex: lastMatchEnd,
+                            colorChar: null,
+                            lightLevels: 0,
+                        });
+                    }
                 }
 
                 const colorChar = match[1];
@@ -326,12 +356,42 @@ export class DecorationManagerService {
 
                 const textEndIndex = nextMatch ? nextMatch.index : endOffset;
 
-                segments.push({
-                    text: text.slice(matchEnd, textEndIndex),
-                    startIndex: matchEnd,
-                    colorChar,
-                    lightLevels,
-                });
+                const afterText = text.slice(matchEnd, textEndIndex);
+                const newlineIndex = afterText.indexOf('~n~');
+
+                if (newlineIndex !== -1) {
+                    if (newlineIndex > 0) {
+                        segments.push({
+                            text: afterText.slice(0, newlineIndex),
+                            startIndex: matchEnd,
+                            colorChar,
+                            lightLevels,
+                        });
+                    }
+
+                    segments.push({
+                        text: '~n~',
+                        startIndex: matchEnd + newlineIndex,
+                        colorChar: null,
+                        lightLevels: 0,
+                    });
+
+                    if (newlineIndex + 3 < afterText.length) {
+                        segments.push({
+                            text: afterText.slice(newlineIndex + 3),
+                            startIndex: matchEnd + newlineIndex + 3,
+                            colorChar: null,
+                            lightLevels: 0,
+                        });
+                    }
+                } else {
+                    segments.push({
+                        text: afterText,
+                        startIndex: matchEnd,
+                        colorChar,
+                        lightLevels,
+                    });
+                }
 
                 lastMatchEnd = textEndIndex;
 
