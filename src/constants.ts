@@ -10,6 +10,11 @@ export const COMMANDS = {
     TOGGLE_INLINE_TEXT_COLORS: 'pawnpainter.toggleInlineTextColours',
     TOGGLE_GAMETEXT_COLORS: 'pawnpainter.toggleGameTextColorPicker',
     TOGGLE_COLOR_PICKER: 'pawnpainter.toggleNormalColorPicker',
+    DISPLAY_AS_HEX_COLOR: 'pawnpainter.displayAsHexColor',
+    DISPLAY_AS_HEX_COLOR_WITH_ALPHA: 'pawnpainter.displayAsHexColorWithAlpha',
+    DISPLAY_AS_HEX_COLOR_NO_ALPHA: 'pawnpainter.displayAsHexColorNoAlpha',
+    DISPLAY_AS_BRACED_COLOR: 'pawnpainter.displayAsBracedColor',
+    DISPLAY_AS_DECIMAL: 'pawnpainter.displayAsDecimal',
 };
 
 export const CONFIG_KEYS = {

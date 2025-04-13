@@ -7,6 +7,7 @@ import { DecorationManager } from './models/decorations';
 import { COMMANDS } from './constants';
 import { registerIgnoredLinesCommands } from './features/ignoredLines/ignoredLinesCommands';
 import { IgnoredLinesManager } from './features/ignoredLines/ignoredLinesManager';
+import { ColorConverter } from './utils/colorConverter';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     const configLoader = ConfigurationLoader.getInstance();
@@ -54,6 +55,45 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
 
     registerCommands(context, configLoader, updateService);
+}
+
+function registerColorDisplayCommand(
+    context: vscode.ExtensionContext,
+    commandId: string,
+    format: string,
+): void {
+    context.subscriptions.push(
+        vscode.commands.registerCommand(commandId, async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) return;
+
+            const selection = editor.selection;
+            const selectedText = editor.document.getText(selection).trim();
+
+            const colorConverter = new ColorConverter();
+            let result: string;
+
+            const detectedFormat = colorConverter.detectColorFormat(selectedText);
+
+            try {
+                if (detectedFormat === 'DECIMAL' || /^-?\d+$/.test(selectedText)) {
+                    const numValue = parseInt(selectedText, 10);
+                    result = colorConverter.formatColor(numValue, format);
+                } else {
+                    result = colorConverter.formatColor(selectedText, format);
+                }
+
+                await editor.edit((editBuilder) => {
+                    editBuilder.replace(selection, result);
+                });
+            } catch (error) {
+                vscode.window.showErrorMessage(
+                    'Unable to display the color in the requested format.',
+                );
+                console.error('Color display error:', error);
+            }
+        }),
+    );
 }
 
 function registerCommands(
@@ -162,6 +202,59 @@ function registerCommands(
             vscode.window.showInformationMessage(
                 `Inline Text Colour Highlighting ${config.inlineText.textEnabled ? 'enabled' : 'disabled'}`,
             );
+        }),
+    );
+
+    registerColorDisplayCommand(context, 'pawnpainter.displayAsHexColorWithAlpha', '0xRRGGBBAA');
+    registerColorDisplayCommand(context, 'pawnpainter.displayAsHexColorNoAlpha', '0xRRGGBB');
+    registerColorDisplayCommand(context, 'pawnpainter.displayAsBracedColor', '{RRGGBB}');
+    registerColorDisplayCommand(context, 'pawnpainter.displayAsDecimal', 'DECIMAL');
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('pawnpainter.displayAsHexColor', async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) return;
+
+            const selection = editor.selection;
+            const selectedText = editor.document.getText(selection).trim();
+
+            const colorConverter = new ColorConverter();
+
+            const formatChoice = await vscode.window.showQuickPick(
+                [
+                    { label: '0xRRGGBBAA', description: 'Standard hex format with alpha' },
+                    { label: '0xRRGGBB', description: 'Standard hex format without alpha' },
+                    { label: '{RRGGBB}', description: 'Braced format for text coloring' },
+                    { label: 'DECIMAL', description: 'Decimal number format' },
+                    { label: 'RGB', description: 'RGB format (r, g, b)' },
+                ],
+                {
+                    placeHolder: 'Select color format to display as',
+                },
+            );
+
+            if (!formatChoice) return;
+
+            try {
+                const detectedFormat = colorConverter.detectColorFormat(selectedText);
+                let result: string;
+
+                if (detectedFormat === 'DECIMAL' || /^-?\d+$/.test(selectedText)) {
+                    const numValue = parseInt(selectedText, 10);
+                    result = colorConverter.formatColor(numValue, formatChoice.label);
+                } else {
+                    result = colorConverter.formatColor(selectedText, formatChoice.label);
+                }
+
+                await editor.edit((editBuilder) => {
+                    editBuilder.replace(selection, result);
+                });
+            } catch (error) {
+                vscode.window.showErrorMessage(
+                    'Unable to display the color in the requested format.',
+                );
+                console.error('Color display error:', error);
+            }
         }),
     );
 }

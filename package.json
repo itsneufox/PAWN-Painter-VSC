@@ -1,7 +1,7 @@
 {
   "name": "pawn-painter",
   "displayName": "PAWN Painter",
-  "version": "2.1.5",
+  "version": "2.2.0",
   "description": "Colour picker for open.mp and SA-MP",
   "publisher": "itsneufox",
   "icon": "images/icon.png",
@@ -53,7 +53,6 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "fix-all": "npm run format && npm run lint:fix"
-    
   },
   "activationEvents": [
     "onLanguage:pawn"
@@ -116,13 +115,49 @@
         "category": "PAWN Painter"
       },
       {
+        "command": "pawnpainter.displayAsHexColorWithAlpha",
+        "title": "Display as 0xRRGGBBAA",
+        "category": "PAWN Painter"
+      },
+      {
+        "command": "pawnpainter.displayAsHexColorNoAlpha",
+        "title": "Display as 0xRRGGBB",
+        "category": "PAWN Painter"
+      },
+      {
+        "command": "pawnpainter.displayAsBracedColor",
+        "title": "Display as {RRGGBB}",
+        "category": "PAWN Painter"
+      },
+      {
+        "command": "pawnpainter.displayAsDecimal",
+        "title": "Display as Decimal",
+        "category": "PAWN Painter"
+      },
+      {
+        "command": "pawnpainter.displayAsHexColor",
+        "title": "Display Color In Different Format",
+        "category": "PAWN Painter"
+      },
+      {
         "command": "pawnpainter.resetGuideState",
         "title": "Reset Guide State (Show Guide on Next Restart)",
         "category": "PAWN Painter"
       }
     ],
+    "submenus": [
+      {
+        "id": "pawnpainter.colorConversionMenu",
+        "label": "Display Color As"
+      }
+    ],
     "menus": {
       "editor/context": [
+        {
+          "submenu": "pawnpainter.colorConversionMenu",
+          "group": "pawnpainter",
+          "when": "editorTextFocus && resourceExtname =~ /\\.(pwn|inc|p|pawno)$/ && editorHasSelection"
+        },
         {
           "command": "pawnpainter.ignoreLine",
           "group": "pawnpainter",
@@ -137,6 +172,24 @@
           "command": "pawnpainter.showIgnoredLines",
           "group": "pawnpainter",
           "when": "editorTextFocus && resourceExtname =~ /\\.(pwn|inc|p|pawno)$/"
+        }
+      ],
+      "pawnpainter.colorConversionMenu": [
+        {
+          "command": "pawnpainter.displayAsHexColorWithAlpha",
+          "group": "1_display"
+        },
+        {
+          "command": "pawnpainter.displayAsHexColorNoAlpha",
+          "group": "1_display"
+        },
+        {
+          "command": "pawnpainter.displayAsBracedColor",
+          "group": "1_display"
+        },
+        {
+          "command": "pawnpainter.displayAsDecimal",
+          "group": "2_display"
         }
       ]
     },
