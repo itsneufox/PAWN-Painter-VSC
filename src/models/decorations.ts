@@ -37,7 +37,10 @@ export class DecorationManager {
         return this.hexColorDecorations.get(colorKey);
     }
 
-    public setHexColorDecoration(colorKey: string, decoration: vscode.TextEditorDecorationType): void {
+    public setHexColorDecoration(
+        colorKey: string,
+        decoration: vscode.TextEditorDecorationType,
+    ): void {
         this.hexColorDecorations.set(colorKey, decoration);
     }
 
@@ -49,7 +52,10 @@ export class DecorationManager {
         return this.inlineColorDecorations.get(colorKey);
     }
 
-    public setInlineColorDecoration(colorKey: string, decoration: vscode.TextEditorDecorationType): void {
+    public setInlineColorDecoration(
+        colorKey: string,
+        decoration: vscode.TextEditorDecorationType,
+    ): void {
         this.inlineColorDecorations.set(colorKey, decoration);
     }
 
@@ -57,12 +63,15 @@ export class DecorationManager {
         return this.inlineColorDecorations;
     }
 
-    public createDecorationFromStyle(color: vscode.Color, style: DecorationStyle): vscode.DecorationRenderOptions {
+    public createDecorationFromStyle(
+        color: vscode.Color,
+        style: DecorationStyle,
+    ): vscode.DecorationRenderOptions {
         const colorRgba = `rgba(${Math.round(color.red * 255)}, ${Math.round(color.green * 255)}, ${Math.round(color.blue * 255)}, ${color.alpha})`;
 
         const baseOptions: vscode.DecorationRenderOptions = {
             rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
-            isWholeLine: false
+            isWholeLine: false,
         };
 
         switch (style) {
@@ -88,17 +97,17 @@ export class DecorationManager {
     }
 
     public disposeGameTextDecorations(): void {
-        Object.values(this.gameTextDecorations).forEach(decoration => decoration.dispose());
+        Object.values(this.gameTextDecorations).forEach((decoration) => decoration.dispose());
         this.gameTextDecorations = {};
     }
 
     public disposeHexColorDecorations(): void {
-        this.hexColorDecorations.forEach(decoration => decoration.dispose());
+        this.hexColorDecorations.forEach((decoration) => decoration.dispose());
         this.hexColorDecorations.clear();
     }
 
     public disposeInlineColorDecorations(): void {
-        this.inlineColorDecorations.forEach(decoration => decoration.dispose());
+        this.inlineColorDecorations.forEach((decoration) => decoration.dispose());
         this.inlineColorDecorations.clear();
     }
 

@@ -11,7 +11,7 @@ interface IgnoredLine {
 export class IgnoredLinesView {
     private static currentPanel: vscode.WebviewPanel | undefined;
 
-    public static createOrShow(context: vscode.ExtensionContext) {
+    public static createOrShow(context: vscode.ExtensionContext): void {
         const columnToShowIn = vscode.window.activeTextEditor
             ? vscode.window.activeTextEditor.viewColumn
             : undefined;
@@ -27,19 +27,19 @@ export class IgnoredLinesView {
             columnToShowIn || vscode.ViewColumn.One,
             {
                 enableScripts: true,
-                retainContextWhenHidden: true
-            }
+                retainContextWhenHidden: true,
+            },
         );
 
         IgnoredLinesView.currentPanel = panel;
-        
+
         const manager = IgnoredLinesManager.getInstance();
         const ignoredLines = manager.getAllIgnoredLines();
-        
+
         panel.webview.html = IgnoredLinesView.getWebviewContent(ignoredLines);
 
         panel.webview.onDidReceiveMessage(
-            async message => {
+            async (message) => {
                 switch (message.command) {
                     case 'openFile':
                         const document = await vscode.workspace.openTextDocument(message.filePath);
@@ -52,13 +52,13 @@ export class IgnoredLinesView {
                     case 'removeLine':
                         await manager.removeIgnoredLines(message.filePath, [message.line]);
                         panel.webview.html = IgnoredLinesView.getWebviewContent(
-                            manager.getAllIgnoredLines()
+                            manager.getAllIgnoredLines(),
                         );
                         break;
                 }
             },
             undefined,
-            context.subscriptions
+            context.subscriptions,
         );
 
         panel.onDidDispose(
@@ -66,7 +66,7 @@ export class IgnoredLinesView {
                 IgnoredLinesView.currentPanel = undefined;
             },
             null,
-            context.subscriptions
+            context.subscriptions,
         );
     }
 
@@ -139,16 +139,22 @@ export class IgnoredLinesView {
             </style>
         </head>
         <body>
-            ${ignoredLines.length === 0 ? `
+            ${
+                ignoredLines.length === 0
+                    ? `
                 <div class="empty-state">
                     No ignored colours found.<br>
                     Right-click on a line and select "Ignore Colour on Selected Line(s)" to add one.
                 </div>
-            ` :
-            Object.entries(groupedByFile).map(([fileName, lines]) => `
+            `
+                    : Object.entries(groupedByFile)
+                          .map(
+                              ([fileName, lines]) => `
                 <div class="file-group">
                     <div class="file-header">${fileName}</div>
-                    ${(lines as IgnoredLine[]).map(line => `
+                    ${(lines as IgnoredLine[])
+                        .map(
+                            (line) => `
                         <div class="line-item">
                             <div>
                                 <span class="line-number">Line ${line.line + 1}:</span>
@@ -163,9 +169,14 @@ export class IgnoredLinesView {
                                 </button>
                             </div>
                         </div>
-                    `).join('')}
+                    `,
+                        )
+                        .join('')}
                 </div>
-            `).join('')}
+            `,
+                          )
+                          .join('')
+            }
             
             <script>
                 const vscode = acquireVsCodeApi();
@@ -193,9 +204,9 @@ export class IgnoredLinesView {
 
 function escapeHtml(unsafe: string): string {
     return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
