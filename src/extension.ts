@@ -1,175 +1,128 @@
-import * as vscode from 'vscode';
-import { UpdateService } from './services/updateService';
-import { WebviewProvider } from './providers/webviewProvider';
-import { ColorProvider } from './providers/colorProvider';
-import { ConfigurationLoader } from './configurations/configLoader';
-import { DecorationManager } from './models/decorations';
-import { COMMANDS } from './constants';
-import { registerIgnoredLinesCommands } from './features/ignoredLines/ignoredLinesCommands';
-import { IgnoredLinesManager } from './features/ignoredLines/ignoredLinesManager';
+import * as vscode from "vscode";
+import { getCustomMatches, getMatches, getGameTextMatches } from "./getMatches";
+import { isValidDocument } from "./utils/helpers";
+import { PawnColorTranslator } from "./colorTranslatorExtended";
+import { GameTextProvider } from "./providers/gameTextProvider";
+import { AlphaWarningsManager } from "./utils/alphaWarnings";
+import { ContextMenuCommands } from "./commands/contextMenuCommands";
+import { IgnoredLinesManager } from "./utils/ignoredLines";
+import { CommandManager } from "./commands/commandManager";
+class PawnPicker implements vscode.Disposable {
+  private disposables: vscode.Disposable[] = [];
+  private gameTextProvider: GameTextProvider;
+  private alphaWarningsManager: AlphaWarningsManager;
+  private contextMenuCommands: ContextMenuCommands;
+  private ignoredLinesManager: IgnoredLinesManager;
+  private commandManager: CommandManager;
 
-export async function activate(context: vscode.ExtensionContext): Promise<void> {
-    const configLoader = ConfigurationLoader.getInstance();
-    const updateService = UpdateService.getInstance();
-    const colorProvider = new ColorProvider();
-    await WebviewProvider.checkVersionAndShowNotification(context);
-    updateService.initialize(context);
-    registerIgnoredLinesCommands(context);
+  constructor(private context: vscode.ExtensionContext) {
+    this.ignoredLinesManager = new IgnoredLinesManager(context);
+    this.gameTextProvider = new GameTextProvider(this.ignoredLinesManager);
+    this.alphaWarningsManager = new AlphaWarningsManager();
+    this.contextMenuCommands = new ContextMenuCommands();
+    this.commandManager = new CommandManager(context, this.ignoredLinesManager);
+    this.commandManager.registerCommands();
+    this.register();
+  }
 
-    context.subscriptions.push(
-        vscode.languages.registerColorProvider(
-            [
-                { scheme: 'file', language: 'pawn' },
-                { scheme: 'file', pattern: '**/*.pwn' },
-                { scheme: 'file', pattern: '**/*.inc' },
-                { scheme: 'file', pattern: '**/*.p' },
-                { scheme: 'file', pattern: '**/*.pawno' },
-            ],
-            colorProvider,
-        ),
-    );
+  private register() {
+    let disabled = false;
+    const self = this;
+    
+    this.disposables.push(vscode.languages.registerColorProvider(
+      [
+        { scheme: 'file', language: 'pawn' },
+        { scheme: 'file', pattern: '**/*.pwn' },
+        { scheme: 'file', pattern: '**/*.inc' },
+        { scheme: 'file', pattern: '**/*.p' },
+        { scheme: 'file', pattern: '**/*.pawno' },
+      ],
+      {
+      provideDocumentColors: async (document: vscode.TextDocument) => {
+        if (disabled) {
+          disabled = false;
+          return;
+        }
+        
+        if (vscode.workspace.getConfiguration('pawn-painter').get<boolean>('disable', false)) {
+          return;
+        }
 
-    const config = configLoader.getConfig();
-    await vscode.workspace
-        .getConfiguration('editor', null)
-        .update(
-            'colorDecorators',
-            config.general.enableColourPicker,
-            vscode.ConfigurationTarget.Global,
+        if (!vscode.workspace.getConfiguration('pawn-painter').get<boolean>('general.enableColorPicker', true)) {
+          return;
+        }
+
+        if (!isValidDocument(document)) return;
+
+        const text = document.getText();
+
+        let matches = [
+          ...(await getMatches(text)),
+          ...getCustomMatches(text, document.languageId),
+        ];
+
+        if (self.ignoredLinesManager) {
+          matches = matches.filter(match => {
+            const line = match.range.start.line;
+            return !self.ignoredLinesManager.isLineIgnored(document, line);
+          });
+        }
+
+        return matches;
+      },
+
+      provideColorPresentations(colorRaw, { range, document }) {
+        if (!isValidDocument(document)) return;
+        
+        if (!vscode.workspace.getConfiguration('pawn-painter').get<boolean>('general.enableColorPicker', true)) {
+          return;
+        }
+
+        const { red: r, green: g, blue: b, alpha } = colorRaw;
+        const color = new PawnColorTranslator({
+          r: r * 255,
+          g: g * 255,
+          b: b * 255,
+          alpha,
+        });
+
+        const representations = [
+          color.pawnHex,
+          color.pawnHexNoAlpha,
+          color.pawnBraced,
+          color.pawnDecimal,
+          color.pawnRgb,
+        ];
+
+        return representations.map(
+          (representation) => new vscode.ColorPresentation(representation)
         );
+      },
+    }));
 
-    if (vscode.window.activeTextEditor) {
-        updateService.updateAllDecorations(vscode.window.activeTextEditor);
+    if (vscode.window.activeTextEditor && this.isPawnFile(vscode.window.activeTextEditor.document)) {
+      this.gameTextProvider.updateDecorations(vscode.window.activeTextEditor);
+      this.alphaWarningsManager.updateAlphaWarnings(vscode.window.activeTextEditor);
     }
+  }
 
-    const ignoredLinesManager = IgnoredLinesManager.getInstance(context);
-    context.subscriptions.push(
-        ignoredLinesManager.onLinesChanged(() => {
-            vscode.window.visibleTextEditors
-                .filter((editor) => editor.document.languageId === 'pawn')
-                .forEach((editor) => {
-                    updateService.updateAllDecorations(editor);
-                });
-        }),
-    );
+  private isPawnFile(document: vscode.TextDocument): boolean {
+    return document.languageId === 'pawn' || 
+           ['.pwn', '.inc', '.p', '.pawno'].some(ext => document.fileName.endsWith(ext));
+  }
 
-    registerCommands(context, configLoader, updateService);
+  public dispose() {
+    this.gameTextProvider?.dispose();
+    this.alphaWarningsManager?.dispose();
+    this.contextMenuCommands?.dispose();
+    this.ignoredLinesManager?.dispose();
+    this.commandManager?.dispose();
+    this.disposables.forEach(disposable => disposable.dispose());
+    this.disposables = [];
+  }
 }
 
-function registerCommands(
-    context: vscode.ExtensionContext,
-    configLoader: ConfigurationLoader,
-    updateService: UpdateService,
-): void {
-    context.subscriptions.push(
-        vscode.commands.registerCommand('pawnpainter.resetGuideState', async () => {
-            await context.globalState.update('pawnpainter.lastVersion', undefined);
-            vscode.window.showInformationMessage(
-                'PAWN Painter notification will be shown on next restart.',
-            );
-        }),
-    );
-
-    context.subscriptions.push(
-        updateService.registerCommand(COMMANDS.TOGGLE_HEX_COLOR, async () => {
-            const config = configLoader.getConfig();
-            await configLoader.updateConfig('hex', 'enabled', !config.hex.enabled);
-
-            const editor = vscode.window.activeTextEditor;
-            if (editor) {
-                updateService.updateAllDecorations(editor);
-            }
-
-            vscode.window.showInformationMessage(
-                `Hex Colour Highlighting ${config.hex.enabled ? 'enabled' : 'disabled'}`,
-            );
-        }),
-    );
-
-    context.subscriptions.push(
-        updateService.registerCommand(COMMANDS.TOGGLE_GAMETEXT_COLORS, async () => {
-            const config = configLoader.getConfig();
-            await configLoader.updateConfig('gameText', 'enabled', !config.gameText.enabled);
-
-            const editor = vscode.window.activeTextEditor;
-            if (editor) {
-                updateService.updateAllDecorations(editor);
-            }
-
-            vscode.window.showInformationMessage(
-                `GameText Colour Preview ${config.gameText.enabled ? 'enabled' : 'disabled'}`,
-            );
-        }),
-    );
-
-    context.subscriptions.push(
-        updateService.registerCommand(COMMANDS.TOGGLE_COLOR_PICKER, async () => {
-            const config = configLoader.getConfig();
-            const newValue = !config.general.enableColourPicker;
-            await configLoader.updateConfig('general', 'enableColourPicker', newValue);
-
-            await vscode.workspace
-                .getConfiguration('editor', null)
-                .update('colorDecorators', newValue, vscode.ConfigurationTarget.Global);
-
-            if (vscode.window.activeTextEditor) {
-                vscode.commands.executeCommand('editor.action.triggerSuggest');
-                setTimeout(() => {
-                    vscode.commands.executeCommand('editor.action.cancelSuggest');
-                }, 100);
-            }
-
-            vscode.window.showInformationMessage(
-                `VS Code Colour Picker ${newValue ? 'enabled' : 'disabled'}`,
-            );
-        }),
-    );
-
-    context.subscriptions.push(
-        updateService.registerCommand(COMMANDS.TOGGLE_INLINE_CODE_COLORS, async () => {
-            const config = configLoader.getConfig();
-            await configLoader.updateConfig(
-                'inlineText',
-                'codeEnabled',
-                !config.inlineText.codeEnabled,
-            );
-
-            const editor = vscode.window.activeTextEditor;
-            if (editor) {
-                updateService.updateAllDecorations(editor);
-            }
-
-            vscode.window.showInformationMessage(
-                `Inline Code Colour Highlighting ${config.inlineText.codeEnabled ? 'enabled' : 'disabled'}`,
-            );
-        }),
-    );
-
-    context.subscriptions.push(
-        updateService.registerCommand(COMMANDS.TOGGLE_INLINE_TEXT_COLORS, async () => {
-            const config = configLoader.getConfig();
-            await configLoader.updateConfig(
-                'inlineText',
-                'textEnabled',
-                !config.inlineText.textEnabled,
-            );
-
-            const editor = vscode.window.activeTextEditor;
-            if (editor) {
-                updateService.updateAllDecorations(editor);
-            }
-
-            vscode.window.showInformationMessage(
-                `Inline Text Colour Highlighting ${config.inlineText.textEnabled ? 'enabled' : 'disabled'}`,
-            );
-        }),
-    );
-}
-
-export function deactivate(): void {
-    const decorationManager = DecorationManager.getInstance();
-    decorationManager.disposeAll();
-
-    const updateService = UpdateService.getInstance();
-    updateService.dispose();
+export function activate(context: vscode.ExtensionContext) {
+  const picker = new PawnPicker(context);
+  context.subscriptions.push(picker);
 }

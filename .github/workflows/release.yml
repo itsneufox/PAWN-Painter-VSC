@@ -1,0 +1,183 @@
+name: Release
+
+permissions:
+  contents: write
+  pull-requests: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Base version (e.g., 3.0.0, 3.1.0)'
+        required: true
+        type: string
+        default: '3.0.0'
+      release_type:
+        description: 'Release type'
+        required: true
+        type: choice
+        options:
+          - alpha
+          - beta
+          - rc
+          - release
+
+jobs:
+  build-extension:
+    name: Build VS Code Extension
+    runs-on: ubuntu-latest
+    outputs:
+      build_version: ${{ steps.vars.outputs.build_version }}
+      build_number: ${{ steps.vars.outputs.build_number }}
+      tag_name: ${{ steps.vars.outputs.tag_name }}
+      release_name: ${{ steps.vars.outputs.release_name }}
+      base_version: ${{ steps.vars.outputs.base_version }}
+      is_prerelease: ${{ steps.vars.outputs.is_prerelease }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+        
+      - name: Declare build output variables
+        id: vars
+        shell: bash
+        run: |
+          # Get build number from total commits
+          build_number=$(git rev-list --count HEAD)
+          
+          # Get base version from input
+          base_version="${{ github.event.inputs.version }}"
+          
+          # Ensure base_version has at least major.minor format
+          if [[ -z "$base_version" ]]; then
+            base_version="3.0.0"
+          fi
+          
+          # Extract major.minor from base version (e.g., 3.0.0 -> 3.0)
+          major_minor="${base_version%.*}"
+          if [[ "$major_minor" == "$base_version" ]]; then
+            # If no patch version found, assume it's already major.minor
+            major_minor="$base_version"
+          fi
+          
+          # Create version with build number as patch: v3.0.2331
+          full_version="v${major_minor}.${build_number}"
+          
+          # Use build number tags for all releases
+          tag_name="${full_version}"
+          
+          # Create release name based on release type
+          if [ "${{ github.event.inputs.release_type }}" = "release" ]; then
+            release_name="v${major_minor}.${build_number}"
+            is_prerelease="false"
+          else
+            release_name="${{ github.event.inputs.release_type == 'alpha' && 'Alpha' || github.event.inputs.release_type == 'beta' && 'Beta' || 'RC' }} v${major_minor}.${build_number}"
+            is_prerelease="true"
+          fi
+          
+          echo "build_version=${full_version}" >> $GITHUB_OUTPUT
+          echo "build_number=${build_number}" >> $GITHUB_OUTPUT
+          echo "tag_name=${tag_name}" >> $GITHUB_OUTPUT
+          echo "release_name=${release_name}" >> $GITHUB_OUTPUT
+          echo "base_version=${base_version}" >> $GITHUB_OUTPUT
+          echo "is_prerelease=${is_prerelease}" >> $GITHUB_OUTPUT
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Update package.json version
+        run: |
+          # Remove 'v' prefix for package.json
+          version_without_v="${{ steps.vars.outputs.build_version }}"
+          version_without_v="${version_without_v#v}"
+          npm version $version_without_v --no-git-tag-version
+        
+      - name: Run linting
+        run: npm run lint
+
+      - name: Setup display for VS Code tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+
+      - name: Run tests
+        run: |
+          export DISPLAY=:99
+          sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 &
+          npm test
+        
+      - name: Build VS Code extension
+        env:
+          PAWN_PAINTER_VERSION: ${{ steps.vars.outputs.build_version }}
+          PAWN_PAINTER_BUILD_NUMBER: ${{ steps.vars.outputs.build_number }}
+        run: npm run package
+        
+      - name: Upload extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: pawn-painter-extension
+          path: "*.vsix"
+
+  create-release:
+    name: Create release
+    runs-on: ubuntu-latest
+    needs: [build-extension]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download extension
+        uses: actions/download-artifact@v4
+        with:
+          name: pawn-painter-extension
+          path: ./
+        
+      - name: Create Release
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ needs.build-extension.outputs.tag_name }}" \
+            --title "${{ needs.build-extension.outputs.release_name }}" \
+            --notes "### PAWN Painter - VS Code Extension
+          
+          **Installation:**
+          - Download \`pawn-painter-${{ needs.build-extension.outputs.build_version }}.vsix\`
+          - In VS Code: \`Ctrl+Shift+P\` → \`Extensions: Install from VSIX...\`
+          - Select the downloaded file
+          
+          **Features:**
+          - PAWN-specific colour detection and highlighting
+          - GameText colour codes (\`~r~\`, \`~g~\`, etc.)
+          - Hex parameter text colouring
+          - Alpha warnings for invisible colours
+          - GameText crash prevention (uneven tildes)
+          - Comprehensive customisation options
+          
+          ${{ needs.build-extension.outputs.is_prerelease == 'true' && '### Pre-release
+          This is a pre-release for testing and feedback. Please report any issues!' || '### Stable Release
+          This is an official stable release.' }}
+          
+          **Issues & Feedback:** https://github.com/${{ github.repository }}/issues  
+          **Marketplace:** https://marketplace.visualstudio.com/items?itemName=itsneufox.pawn-painter" \
+            ${{ needs.build-extension.outputs.is_prerelease == 'true' && '--prerelease' || '' }} \
+            "./pawn-painter.vsix#pawn-painter-${{ needs.build-extension.outputs.build_version }}.vsix"
+      
+      # Uncomment below to auto-publish to VS Code Marketplace
+      # Requires VSCODE_MARKETPLACE_TOKEN secret in repository settings
+      # - name: Publish to VS Code Marketplace
+      #   if: needs.build-extension.outputs.is_prerelease == 'false'
+      #   uses: HaaLeo/publish-vscode-extension@v1
+      #   with:
+      #     pat: ${{ secrets.VSCODE_MARKETPLACE_TOKEN }}
+      #     registryUrl: https://marketplace.visualstudio.com
+      #     extensionFile: ./pawn-painter.vsix

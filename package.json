@@ -1,243 +1,327 @@
 {
   "name": "pawn-painter",
   "displayName": "PAWN Painter",
-  "version": "2.1.5",
-  "description": "Colour picker for open.mp and SA-MP",
+  "description": "Advanced color visualization for PAWN/SA-MP/open.mp development",
+  "icon": "images/cpu-logo-128.png",
+  "version": "3.0.0",
   "publisher": "itsneufox",
-  "icon": "images/icon.png",
-  "galleryBanner": {
-    "color": "#C80000",
-    "theme": "dark"
-  },
+  "keywords": [
+    "pawn",
+    "color",
+    "colour",
+    "picker",
+    "translator",
+    "samp",
+    "sa-mp",
+    "open.mp",
+    "omp",
+    "gametext",
+    "highlighting",
+    "vscode",
+    "extension"
+  ],
   "author": {
+    "email": "ajuda@tntsamp.com",
     "name": "itsneufox"
   },
   "license": "MIT",
   "repository": {
-    "type": "git",
-    "url": "https://github.com/itsneufox/PAWN-Painter-VSC.git"
+    "url": "https://github.com/itsneufox/PAWN-Painter-VSC"
   },
   "bugs": {
     "url": "https://github.com/itsneufox/PAWN-Painter-VSC/issues",
     "email": "ajuda@tntsamp.com"
   },
   "engines": {
-    "vscode": "^1.95.0"
+    "vscode": "^1.74.0"
   },
   "categories": [
     "Other"
   ],
-  "keywords": [
-    "pawn",
-    "color",
-    "colour",
-    "highlighter",
-    "syntax",
-    "open.mp",
-    "omp",
-    "open multiplayer",
-    "openmultiplayer",
-    "samp",
-    "vscode",
-    "language",
-    "sa:mp",
-    "sa-mp"
-  ],
-  "main": "./out/extension.js",
-  "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "lint": "eslint \"src/**/*.ts\"",
-    "lint:fix": "eslint \"src/**/*.ts\" --fix",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\"",
-    "fix-all": "npm run format && npm run lint:fix"
-    
-  },
   "activationEvents": [
     "onLanguage:pawn"
   ],
+  "main": "./dist/main.js",
+  "scripts": {
+    "set-env": "export $(cat .env | xargs)",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/main.js --external:vscode --format=cjs --platform=node",
+    "compile": "npm run checks && npm run clean && npm run esbuild-base -- --minify",
+    "esbuild": "npm run esbuild-base -- --sourcemap",
+    "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
+    "watch": "npm run clean && npm run esbuild-watch",
+    "lint": "eslint src --ext ts",
+    "clean": "rimraf dist",
+    "pretest": "npm run test-compile",
+    "test": "node ./out/test/runTest.js",
+    "test-compile": "npm run clean-test && tsc -p ./tsconfig.json",
+    "clean-test": "rimraf out",
+    "checks": "npm run lint && npm run test",
+    "pre-push": "bash scripts/no-push-main.sh && npm run checks",
+    "package": "vsce package --out pawn-painter.vsix",
+    "vscode:prepublish": "npm run compile",
+    "publish-vsc": "vsce publish",
+    "publish-open": "env-cmd -x ovsx publish -p $OPENVSX_TOKEN",
+    "publish": "npm run publish-vsc && npm run publish-open && npm run package"
+  },
+  "pre-push": [
+    "pre-push"
+  ],
+  "devDependencies": {
+    "@types/chai": "4.3.4",
+    "@types/fs-extra": "11.0.1",
+    "@types/glob": "8.0.0",
+    "@types/mocha": "10.0.1",
+    "@types/node": "16.18.11",
+    "@types/parse-color": "1.0.1",
+    "@types/sinon": "10.0.13",
+    "@types/vscode": "1.74.0",
+    "@typescript-eslint/eslint-plugin": "5.45.0",
+    "@typescript-eslint/parser": "5.45.0",
+    "@vscode/test-electron": "^2.3.8",
+    "chai": "4.3.7",
+    "env-cmd": "10.1.0",
+    "esbuild": "^0.19.4",
+    "eslint": "8.28.0",
+    "fs-extra": "11.1.0",
+    "glob": "8.0.3",
+    "mocha": "10.1.0",
+    "pre-push": "0.1.4",
+    "rimraf": "4.1.2",
+    "sinon": "15.0.1",
+    "typescript": "5.5.3"
+  },
+  "dependencies": {
+    "color-translate": "1.3.0"
+  },
   "contributes": {
+    "languages": [
+      {
+        "id": "pawn",
+        "extensions": [".pwn", ".inc", ".p", ".pawno"],
+        "aliases": ["PAWN", "pawn"]
+      }
+    ],
     "configurationDefaults": {
       "[pawn]": {
         "editor.colorDecorators": true
       }
     },
-    "languages": [
-      {
-        "id": "pawn",
-        "extensions": [
-          ".pwn",
-          ".inc",
-          ".p",
-          ".pawno"
-        ],
-        "aliases": [
-          "PAWN",
-          "pawn"
-        ]
-      }
-    ],
     "commands": [
       {
-        "command": "pawnpainter.toggleHexColorHighlight",
+        "command": "pawn-painter.convertToHexWithAlpha",
+        "title": "Convert to 0xRRGGBBAA",
+        "category": "PAWN Painter"
+      },
+      {
+        "command": "pawn-painter.convertToHexNoAlpha",
+        "title": "Convert to 0xRRGGBB",
+        "category": "PAWN Painter"
+      },
+      {
+        "command": "pawn-painter.convertToBraced",
+        "title": "Convert to {RRGGBB}",
+        "category": "PAWN Painter"
+      },
+      {
+        "command": "pawn-painter.convertToRGB",
+        "title": "Convert to RGB",
+        "category": "PAWN Painter"
+      },
+      {
+        "command": "pawn-painter.toggleHexColorHighlight",
         "title": "Toggle Hex Colour Highlighting",
         "category": "PAWN Painter"
       },
       {
-        "command": "pawnpainter.toggleGameTextColorPicker",
+        "command": "pawn-painter.toggleGameTextColorPicker",
         "title": "Toggle GameText Colour Preview",
         "category": "PAWN Painter"
       },
       {
-        "command": "pawnpainter.toggleNormalColorPicker",
+        "command": "pawn-painter.toggleNormalColorPicker",
         "title": "Toggle Normal Colour Picker",
         "category": "PAWN Painter"
       },
       {
-        "command": "pawnpainter.ignoreLine",
+        "command": "pawn-painter.ignoreLine",
         "title": "Ignore Colour On Selected Line(s)",
         "category": "PAWN Painter"
       },
       {
-        "command": "pawnpainter.unignoreLine",
+        "command": "pawn-painter.unignoreLine",
         "title": "Restore Colour To Selected Line(s)",
         "category": "PAWN Painter"
       },
       {
-        "command": "pawnpainter.clearIgnoredLines",
+        "command": "pawn-painter.clearIgnoredLines",
         "title": "Clear All Ignored Lines",
         "category": "PAWN Painter"
       },
       {
-        "command": "pawnpainter.showIgnoredLines",
-        "title": "History Of All Ignored Lines",
+        "command": "pawn-painter.showIgnoredLines",
+        "title": "Show Ignored Lines History",
         "category": "PAWN Painter"
       },
       {
-        "command": "pawnpainter.resetGuideState",
+        "command": "pawn-painter.ignoreFile",
+        "title": "Ignore All Colors In This File",
+        "category": "PAWN Painter"
+      },
+      {
+        "command": "pawn-painter.unignoreFile",
+        "title": "Restore All Colors In This File", 
+        "category": "PAWN Painter"
+      },
+      {
+        "command": "pawn-painter.resetGuideState",
         "title": "Reset Guide State (Show Guide on Next Restart)",
         "category": "PAWN Painter"
       }
     ],
+      "submenus": [
+        {
+          "id": "pawn-painter.colorConversionMenu",
+          "label": "Convert Color To"
+        },
+        {
+          "id": "pawn-painter.ignoreMenu",
+          "label": "Ignore/Restore Colors"
+        }
+      ],
     "menus": {
       "editor/context": [
         {
-          "command": "pawnpainter.ignoreLine",
-          "group": "pawnpainter",
-          "when": "editorTextFocus && resourceExtname =~ /\\.(pwn|inc|p|pawno)$/"
+          "submenu": "pawn-painter.colorConversionMenu",
+          "group": "pawn-painter",
+          "when": "editorTextFocus && resourceExtname =~ /\\.(pwn|inc|p|pawno)$/ && editorHasSelection"
         },
         {
-          "command": "pawnpainter.unignoreLine",
-          "group": "pawnpainter",
+          "submenu": "pawn-painter.ignoreMenu",
+          "group": "pawn-painter@1",
           "when": "editorTextFocus && resourceExtname =~ /\\.(pwn|inc|p|pawno)$/"
+        }
+      ],
+      "pawn-painter.colorConversionMenu": [
+        {
+          "command": "pawn-painter.convertToHexWithAlpha",
+          "group": "1_hex"
         },
         {
-          "command": "pawnpainter.showIgnoredLines",
-          "group": "pawnpainter",
-          "when": "editorTextFocus && resourceExtname =~ /\\.(pwn|inc|p|pawno)$/"
+          "command": "pawn-painter.convertToHexNoAlpha",
+          "group": "1_hex"
+        },
+        {
+          "command": "pawn-painter.convertToBraced",
+          "group": "2_other"
+        },
+        {
+          "command": "pawn-painter.convertToRGB",
+          "group": "2_other"
+        }
+      ],
+      "pawn-painter.ignoreMenu": [
+        {
+          "command": "pawn-painter.ignoreLine",
+          "title": "Ignore Selected Lines",
+          "group": "1_lines"
+        },
+        {
+          "command": "pawn-painter.unignoreLine",
+          "title": "Restore Selected Lines",
+          "group": "1_lines"
+        },
+        {
+          "command": "pawn-painter.ignoreFile",
+          "title": "Ignore All Colors In This File",
+          "group": "2_file"
+        },
+        {
+          "command": "pawn-painter.unignoreFile",
+          "title": "Restore All Colors In This File",
+          "group": "2_file"
         }
       ]
     },
     "configuration": {
       "title": "PAWN Painter",
       "properties": {
-        "pawnpainter.general.enableColorPicker": {
+        "pawn-painter.disable": {
           "type": "boolean",
-          "default": true,
-          "description": "Enable the VS Code colour picker for all supported colour formats.",
+          "default": false,
+          "description": "Disables the extension completely",
           "order": 1
         },
-        "pawnpainter.hex.enabled": {
+        "pawn-painter.lowPerformanceMode": {
           "type": "boolean",
-          "default": true,
-          "description": "Enable highlighting for hexadecimal colour codes (0xRRGGBB, 0xRRGGBBAA).",
+          "default": false,
+          "description": "Enable low performance mode - shows only color picker squares and disables all text coloring",
           "order": 2
         },
-        "pawnpainter.hex.style": {
-          "type": "string",
-          "enum": [
-            "text",
-            "underline",
-            "background"
-          ],
-          "default": "underline",
-          "description": "Choose how hex colour codes should be displayed.",
+        "pawn-painter.general.enableColorPicker": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the VS Code colour picker for all supported colour formats",
           "order": 3
         },
-        "pawnpainter.hex.showAlphaWarnings": {
+        "pawn-painter.gameText.textEnabled": {
           "type": "boolean",
           "default": true,
-          "description": "Show warnings for colours with alpha value of 00.",
-          "order": 4
+          "description": "GameText: Enable highlighting for text following GameText colour codes (~r~, ~g~, etc)",
+          "order": 11
         },
-        "pawnpainter.gameText.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable colour preview for GameText colour codes (~r~, ~g~, ~b~, etc).",
-          "order": 5
-        },
-        "pawnpainter.gameText.style": {
+        "pawn-painter.gameText.textStyle": {
           "type": "string",
-          "enum": [
-            "text",
-            "underline",
-            "background"
-          ],
+          "enum": ["text", "underline", "background"],
           "default": "text",
-          "description": "Choose how GameText colours should be displayed.",
-          "order": 6
+          "description": "GameText: Choose how text following GameText colours should be displayed",
+          "order": 12
         },
-        "pawnpainter.inlineText.codeEnabled": {
+        "pawn-painter.inlineText.textEnabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable highlighting for the inline colour codes ({RRGGBB}).",
-          "order": 7
+          "description": "Inline Text: Enable highlighting for text following inline colour codes ({RRGGBB})",
+          "order": 20
         },
-        "pawnpainter.inlineText.textEnabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable highlighting for text following inline colour codes.",
-          "order": 8
-        },
-        "pawnpainter.inlineText.codeStyle": {
+        "pawn-painter.inlineText.textStyle": {
           "type": "string",
-          "enum": [
-            "text",
-            "underline",
-            "background"
-          ],
+          "enum": ["text", "underline", "background"],
+          "default": "text",
+          "description": "Inline Text: Choose how text following inline colour codes should be displayed",
+          "order": 21
+        },
+        "pawn-painter.hexParameter.textEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Hex Parameters: Enable coloring for string literals following hex color parameters in function calls",
+          "order": 30
+        },
+        "pawn-painter.hexParameter.textStyle": {
+          "type": "string",
+          "enum": ["text", "underline", "background"],
+          "default": "text",
+          "description": "Hex Parameters: Choose how text following hex color parameters should be displayed",
+          "order": 31
+        },
+        "pawn-painter.hex.showAlphaWarnings": {
+          "type": "boolean",
+          "default": true,
+          "description": "Alpha Warnings: Show warnings for colours with alpha value of 00",
+          "order": 40
+        },
+        "pawn-painter.alphaWarnings.highlightCode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Alpha Warnings: Highlight the colour code itself",
+          "order": 41
+        },
+        "pawn-painter.alphaWarnings.highlightStyle": {
+          "type": "string",
+          "enum": ["text", "underline", "background"],
           "default": "underline",
-          "description": "Choose how the inline colour code itself ({RRGGBB}) should be displayed.",
-          "order": 9
-        },
-        "pawnpainter.inlineText.textStyle": {
-          "type": "string",
-          "enum": [
-            "text",
-            "underline",
-            "background"
-          ],
-          "default": "text",
-          "description": "Choose how text following an inline colour should be displayed.",
-          "order": 10
+          "description": "Alpha Warnings: Choose how the colour code should be highlighted",
+          "order": 42
         }
       }
     }
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.24.0",
-    "@types/node": "^22.8.7",
-    "@types/vscode": "^1.95.0",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
-    "eslint": "^8.57.1",
-    "eslint-config-prettier": "^10.1.2",
-    "eslint-plugin-prettier": "^5.2.6",
-    "globals": "^16.0.0",
-    "prettier": "^3.5.3",
-    "typescript": "^5.6.3",
-    "typescript-eslint": "^8.29.0"
   }
 }
