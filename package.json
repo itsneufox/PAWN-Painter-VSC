@@ -58,6 +58,8 @@
     "checks": "npm run lint && npm run test",
     "pre-push": "bash scripts/no-push-main.sh && npm run checks",
     "package": "vsce package --out pawn-painter.vsix",
+    "package-ci": "npm run compile-ci && vsce package --out pawn-painter.vsix",
+    "compile-ci": "npm run lint && npm run clean && npm run esbuild-base -- --minify",
     "vscode:prepublish": "npm run compile",
     "publish-vsc": "vsce publish",
     "publish-open": "env-cmd -x ovsx publish -p $OPENVSX_TOKEN",
