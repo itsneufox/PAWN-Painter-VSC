@@ -121,7 +121,7 @@ jobs:
         env:
           PAWN_PAINTER_VERSION: ${{ steps.vars.outputs.build_version }}
           PAWN_PAINTER_BUILD_NUMBER: ${{ steps.vars.outputs.build_number }}
-        run: npm run package
+        run: npm run package-ci
         
       - name: Upload extension
         uses: actions/upload-artifact@v4
