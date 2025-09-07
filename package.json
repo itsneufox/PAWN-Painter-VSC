@@ -47,13 +47,15 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
+    "compile-ci": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-    "fix-all": "npm run format && npm run lint:fix"
-    
+    "fix-all": "npm run format && npm run lint:fix",
+    "package-ci": "npm run lint && npm run compile-ci && npm run vsce-package-ci",
+    "vsce-package-ci": "npm pkg set scripts.vscode:prepublish=\"echo 'Skipping prepublish for CI'\" && npx vsce package --out pawn-painter.vsix && npm pkg set scripts.vscode:prepublish=\"npm run compile\""
   },
   "activationEvents": [
     "onLanguage:pawn"
