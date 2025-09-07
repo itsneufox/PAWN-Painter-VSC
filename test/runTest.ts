@@ -18,7 +18,7 @@ async function main() {
       version,
       extensionDevelopmentPath,
       extensionTestsPath,
-      launchArgs: ["--disable-extensions"],
+      launchArgs: ["--disable-extensions", "--headless"],
     });
   } catch (err) {
     // eslint-disable-next-line no-console
