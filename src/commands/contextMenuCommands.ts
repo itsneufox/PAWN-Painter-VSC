@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { t } from '../i18n';
 import { PawnColorTranslator } from "../colorTranslatorExtended";
 import { parseColorString } from "../utils/helpers";
 
@@ -21,13 +22,13 @@ export class ContextMenuCommands {
   private async convertColor(formatType: 'hexWithAlpha' | 'hexNoAlpha' | 'braced' | 'rgb') {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-      vscode.window.showErrorMessage('No active editor');
+      vscode.window.showErrorMessage(t('messages.noActiveEditor'));
       return;
     }
 
     const selection = editor.selection;
     if (selection.isEmpty) {
-      vscode.window.showErrorMessage('Please select a colour to convert');
+      vscode.window.showErrorMessage(t('messages.selectColorToConvert'));
       return;
     }
 
@@ -35,7 +36,7 @@ export class ContextMenuCommands {
     
     const vsColour = parseColorString(selectedText);
     if (!vsColour) {
-      vscode.window.showErrorMessage(`"${selectedText}" is not a valid colour format`);
+      vscode.window.showErrorMessage(t('messages.invalidColorFormat', selectedText));
       return;
     }
     const pawnColour = new PawnColorTranslator({
@@ -60,7 +61,7 @@ export class ContextMenuCommands {
         convertedColour = pawnColour.pawnRgb;
         break;
       default:
-        vscode.window.showErrorMessage('Unknown format type');
+        vscode.window.showErrorMessage(t('messages.invalidColorFormat', 'unknown'));
         return;
     }
 
@@ -68,7 +69,7 @@ export class ContextMenuCommands {
       editBuilder.replace(selection, convertedColour);
     });
 
-    vscode.window.showInformationMessage(`Converted "${selectedText}" to ${convertedColour}`);
+    vscode.window.showInformationMessage(t('messages.colorConverted', selectedText, convertedColour));
   }
 
   private async convertToHexWithAlpha() {
