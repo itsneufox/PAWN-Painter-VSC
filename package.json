@@ -112,83 +112,88 @@
     "commands": [
       {
         "command": "pawn-painter.convertToHexWithAlpha",
-        "title": "Convert to 0xRRGGBBAA",
+        "title": "%command.convertToHexWithAlpha%",
         "category": "PAWN Painter"
       },
       {
         "command": "pawn-painter.convertToHexNoAlpha",
-        "title": "Convert to 0xRRGGBB",
+        "title": "%command.convertToHexNoAlpha%",
         "category": "PAWN Painter"
       },
       {
         "command": "pawn-painter.convertToBraced",
-        "title": "Convert to {RRGGBB}",
+        "title": "%command.convertToBraced%",
         "category": "PAWN Painter"
       },
       {
         "command": "pawn-painter.convertToRGB",
-        "title": "Convert to RGB",
+        "title": "%command.convertToRGB%",
         "category": "PAWN Painter"
       },
       {
         "command": "pawn-painter.toggleHexColorHighlight",
-        "title": "Toggle Hex Colour Highlighting",
+        "title": "%command.toggleHexColorHighlight%",
         "category": "PAWN Painter"
       },
       {
         "command": "pawn-painter.toggleGameTextColorPicker",
-        "title": "Toggle GameText Colour Preview",
+        "title": "%command.toggleGameTextColorPicker%",
         "category": "PAWN Painter"
       },
       {
         "command": "pawn-painter.toggleNormalColorPicker",
-        "title": "Toggle Normal Colour Picker",
+        "title": "%command.toggleNormalColorPicker%",
         "category": "PAWN Painter"
       },
       {
         "command": "pawn-painter.ignoreLine",
-        "title": "Ignore Colour On Selected Line(s)",
+        "title": "%command.ignoreLine%",
         "category": "PAWN Painter"
       },
       {
         "command": "pawn-painter.unignoreLine",
-        "title": "Restore Colour To Selected Line(s)",
+        "title": "%command.unignoreLine%",
         "category": "PAWN Painter"
       },
       {
         "command": "pawn-painter.clearIgnoredLines",
-        "title": "Clear All Ignored Lines",
+        "title": "%command.clearIgnoredLines%",
         "category": "PAWN Painter"
       },
       {
         "command": "pawn-painter.showIgnoredLines",
-        "title": "Show Ignored Lines History",
+        "title": "%command.showIgnoredLines%",
         "category": "PAWN Painter"
       },
       {
         "command": "pawn-painter.ignoreFile",
-        "title": "Ignore All Colors In This File",
+        "title": "%command.ignoreFile%",
         "category": "PAWN Painter"
       },
       {
         "command": "pawn-painter.unignoreFile",
-        "title": "Restore All Colors In This File", 
+        "title": "%command.unignoreFile%",
         "category": "PAWN Painter"
       },
       {
         "command": "pawn-painter.resetGuideState",
-        "title": "Reset Guide State (Show Guide on Next Restart)",
+        "title": "%command.resetGuideState%",
+        "category": "PAWN Painter"
+      },
+      {
+        "command": "pawn-painter.refreshDecorations",
+        "title": "%command.refreshDecorations%",
         "category": "PAWN Painter"
       }
     ],
       "submenus": [
         {
           "id": "pawn-painter.colorConversionMenu",
-          "label": "Convert Color To"
+          "label": "%menu.convertColorTo%"
         },
         {
           "id": "pawn-painter.ignoreMenu",
-          "label": "Ignore/Restore Colors"
+          "label": "%menu.ignoreRestoreColors%"
         }
       ],
     "menus": {
@@ -201,6 +206,11 @@
         {
           "submenu": "pawn-painter.ignoreMenu",
           "group": "pawn-painter@1",
+          "when": "editorTextFocus && resourceExtname =~ /\\.(pwn|inc|p|pawno)$/"
+        },
+        {
+          "command": "pawn-painter.refreshDecorations",
+          "group": "pawn-painter@2",
           "when": "editorTextFocus && resourceExtname =~ /\\.(pwn|inc|p|pawno)$/"
         }
       ],
@@ -225,103 +235,111 @@
       "pawn-painter.ignoreMenu": [
         {
           "command": "pawn-painter.ignoreLine",
-          "title": "Ignore Selected Lines",
+          "title": "%menu.ignoreSelectedLines%",
           "group": "1_lines"
         },
         {
           "command": "pawn-painter.unignoreLine",
-          "title": "Restore Selected Lines",
+          "title": "%menu.restoreSelectedLines%",
           "group": "1_lines"
         },
         {
           "command": "pawn-painter.ignoreFile",
-          "title": "Ignore All Colors In This File",
+          "title": "%menu.ignoreAllColorsInFile%",
           "group": "2_file"
         },
         {
           "command": "pawn-painter.unignoreFile",
-          "title": "Restore All Colors In This File",
+          "title": "%menu.restoreAllColorsInFile%",
           "group": "2_file"
         }
       ]
     },
     "configuration": {
-      "title": "PAWN Painter",
+      "title": "%config.title%",
       "properties": {
         "pawn-painter.disable": {
           "type": "boolean",
           "default": false,
-          "description": "Disables the extension completely",
+          "description": "%config.disable.description%",
           "order": 1
         },
-        "pawn-painter.lowPerformanceMode": {
+        "pawn-painter.autoPerformanceMode": {
           "type": "boolean",
-          "default": false,
-          "description": "Enable low performance mode - shows only color picker squares and disables all text coloring",
+          "default": true,
+          "description": "%config.autoPerformanceMode.description%",
           "order": 2
         },
         "pawn-painter.general.enableColorPicker": {
           "type": "boolean",
           "default": true,
-          "description": "Enable the VS Code colour picker for all supported colour formats",
-          "order": 3
+          "description": "%config.general.enableColorPicker.description%",
+          "order": 4
+        },
+        "pawn-painter.performance.colorDecoratorLimit": {
+          "type": "number",
+          "default": 500,
+          "minimum": 100,
+          "maximum": 10000,
+          "description": "%config.performance.colorDecoratorLimit.description%",
+          "order": 5
         },
         "pawn-painter.gameText.textEnabled": {
           "type": "boolean",
           "default": true,
-          "description": "GameText: Enable highlighting for text following GameText colour codes (~r~, ~g~, etc)",
+          "description": "%config.gameText.textEnabled.description%",
           "order": 11
         },
         "pawn-painter.gameText.textStyle": {
           "type": "string",
           "enum": ["text", "underline", "background"],
           "default": "text",
-          "description": "GameText: Choose how text following GameText colours should be displayed",
+          "description": "%config.gameText.textStyle.description%",
           "order": 12
         },
         "pawn-painter.inlineText.textEnabled": {
           "type": "boolean",
           "default": true,
-          "description": "Inline Text: Enable highlighting for text following inline colour codes ({RRGGBB})",
+          "description": "%config.inlineText.textEnabled.description%",
           "order": 20
         },
         "pawn-painter.inlineText.textStyle": {
           "type": "string",
           "enum": ["text", "underline", "background"],
           "default": "text",
-          "description": "Inline Text: Choose how text following inline colour codes should be displayed",
+          "description": "%config.inlineText.textStyle.description%",
           "order": 21
         },
         "pawn-painter.hexParameter.textEnabled": {
           "type": "boolean",
           "default": true,
-          "description": "Hex Parameters: Enable coloring for string literals following hex color parameters in function calls",
+          "description": "%config.hexParameter.textEnabled.description%",
           "order": 30
         },
         "pawn-painter.hexParameter.textStyle": {
           "type": "string",
           "enum": ["text", "underline", "background"],
           "default": "text",
-          "description": "Hex Parameters: Choose how text following hex color parameters should be displayed",
+          "description": "%config.hexParameter.textStyle.description%",
           "order": 31
         },
         "pawn-painter.hex.showAlphaWarnings": {
           "type": "boolean",
           "default": true,
-          "description": "Alpha Warnings: Show warnings for colours with alpha value of 00",
+          "description": "%config.hex.showAlphaWarnings.description%",
           "order": 40
         },
         "pawn-painter.alphaWarnings.highlightCode": {
           "type": "boolean",
           "default": true,
-          "description": "Alpha Warnings: Highlight the colour code itself",
+          "description": "%config.alphaWarnings.highlightCode.description%",
           "order": 41
         },
         "pawn-painter.alphaWarnings.highlightStyle": {
           "type": "string",
           "enum": ["text", "underline", "background"],
           "default": "underline",
-          "description": "Alpha Warnings: Choose how the colour code should be highlighted",
+          "description": "%config.alphaWarnings.highlightStyle.description%",
           "order": 42
         }
       }
