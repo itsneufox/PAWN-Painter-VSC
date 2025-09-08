@@ -55,6 +55,10 @@
     "colorChunkRefreshed": "Colori aggiornati: segmento {0}/{1} ({2}-{3} di {4})",
     "textChunkRefreshed": "Testo aggiornato: segmento {0}/{1} ({2}-{3} di {4})"
   },
+  "warnings": {
+    "invisibleColor": " ⚠️ contiene colore invisibile",
+    "unevenTildes": " ⚠️ I tilde dispari possono causare crash ai giocatori"
+  },
   "configuration": {
     "disable": {
       "description": "Disabilita completamente l'estensione"

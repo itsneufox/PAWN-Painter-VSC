@@ -55,6 +55,10 @@
     "colorChunkRefreshed": "Farben aktualisiert: Segment {0}/{1} ({2}-{3} von {4})",
     "textChunkRefreshed": "Text aktualisiert: Segment {0}/{1} ({2}-{3} von {4})"
   },
+  "warnings": {
+    "invisibleColor": " ⚠️ enthält unsichtbare Farbe",
+    "unevenTildes": " ⚠️ Ungleiche Tilden können Spieler zum Absturz bringen"
+  },
   "configuration": {
     "disable": {
       "description": "Deaktiviert die Erweiterung vollständig"

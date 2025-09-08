@@ -55,6 +55,10 @@
     "colorChunkRefreshed": "Colores actualizados: fragmento {0}/{1} ({2}-{3} de {4})",
     "textChunkRefreshed": "Texto actualizado: fragmento {0}/{1} ({2}-{3} de {4})"
   },
+  "warnings": {
+    "invisibleColor": " ⚠️ contiene color invisible",
+    "unevenTildes": " ⚠️ Las tildes impares pueden causar crash a los jugadores"
+  },
   "configuration": {
     "disable": {
       "description": "Desactiva la extensión completamente"

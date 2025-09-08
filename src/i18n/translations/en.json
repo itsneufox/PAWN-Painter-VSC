@@ -56,6 +56,10 @@
     "colorChunkRefreshed": "Refreshed colors: chunk {0}/{1} ({2}-{3} of {4})",
     "textChunkRefreshed": "Refreshed text: chunk {0}/{1} ({2}-{3} of {4})"
   },
+  "warnings": {
+    "invisibleColor": " ⚠️ contains invisible colour",
+    "unevenTildes": " ⚠️ Uneven tildes may crash players"
+  },
   "configuration": {
     "disable": {
       "description": "Disables the extension completely"

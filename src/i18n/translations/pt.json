@@ -55,6 +55,10 @@
     "colorChunkRefreshed": "Cores atualizadas: pedaço {0}/{1} ({2}-{3} de {4})",
     "textChunkRefreshed": "Texto atualizado: pedaço {0}/{1} ({2}-{3} de {4})"
   },
+  "warnings": {
+    "invisibleColor": " ⚠️ contém cor invisível",
+    "unevenTildes": " ⚠️ Tis desbalanceados podem causar crash nos jogadores"
+  },
   "configuration": {
     "disable": {
       "description": "Desativa a extensão completamente"
