@@ -19,7 +19,7 @@ export class GameTextProvider implements vscode.Disposable {
     
     this.gameTextWarningDecoration = vscode.window.createTextEditorDecorationType({
       after: {
-        contentText: ' ⚠️ Uneven tildes may crash players',
+        contentText: t('warnings.unevenTildes'),
         color: '#FF6B6B',
         backgroundColor: 'rgba(255, 107, 107, 0.1)',
         border: '1px solid rgba(255, 107, 107, 0.5)',
