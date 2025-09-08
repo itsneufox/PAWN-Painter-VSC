@@ -2,15 +2,20 @@ import * as vscode from "vscode";
 import { getSetting } from "../utils/helpers";
 import { gameTextColors } from "../shared/constants";
 import { IgnoredLinesManager } from "../utils/ignoredLines";
+import { t } from '../i18n';
+import { ColorProvider } from './colorProvider';
 
 export class GameTextProvider implements vscode.Disposable {
   private decorations = new Map<string, vscode.TextEditorDecorationType>();
   private gameTextWarningDecoration: vscode.TextEditorDecorationType;
   private disposables: vscode.Disposable[] = [];
   private ignoredLinesManager?: IgnoredLinesManager;
+  private colorProvider?: ColorProvider;
+  private allDecorationRanges = new Map<string, Map<string, vscode.Range[]>>(); // documentUri -> decorationKey -> ranges
 
-  constructor(ignoredLinesManager?: IgnoredLinesManager) {
+  constructor(ignoredLinesManager?: IgnoredLinesManager, colorProvider?: ColorProvider) {
     this.ignoredLinesManager = ignoredLinesManager;
+    this.colorProvider = colorProvider;
     
     this.gameTextWarningDecoration = vscode.window.createTextEditorDecorationType({
       after: {
@@ -36,6 +41,8 @@ export class GameTextProvider implements vscode.Disposable {
       vscode.workspace.onDidChangeTextDocument((event) => {
         const editor = vscode.window.activeTextEditor;
         if (editor && event.document === editor.document && this.isPawnFile(editor.document)) {
+          // Clear cache when document changes
+          this.allDecorationRanges.delete(event.document.uri.toString());
           setTimeout(() => this.updateDecorations(editor), 100);
         }
       })
@@ -47,45 +54,40 @@ export class GameTextProvider implements vscode.Disposable {
            ['.pwn', '.inc', '.p', '.pawno'].some(ext => document.fileName.endsWith(ext));
   }
 
+
   public updateDecorations(editor: vscode.TextEditor) {
     if (!editor || !this.isPawnFile(editor.document)) return;
     
     if (getSetting<boolean>("disable")) return;
     
-    if (getSetting<boolean>("lowPerformanceMode")) {
-      this.clearDecorations(editor);
-      return;
-    }
-    
     this.clearDecorations(editor);
     
+    const documentUri = editor.document.uri.toString();
     const globalDecorationRanges = new Map<string, vscode.Range[]>();
     const priorityRanges: vscode.Range[] = []; // Ranges that should not be overridden by hex parameters
     
+    // Get the last line with color decorators for coordination
+    const lastDecoratorLine = this.colorProvider?.getLastDecoratorLine(documentUri) ?? -1;
+    
     // First, add GameText and inline decorations (higher priority)
     if (getSetting<boolean>("gameText.textEnabled")) {
-      this.addGameTextDecorations(editor, globalDecorationRanges, priorityRanges);
+      this.addGameTextDecorations(editor, globalDecorationRanges, priorityRanges, lastDecoratorLine);
     }
     
     if (getSetting<boolean>("inlineText.textEnabled")) {
-      this.addInlineTextDecorations(editor, globalDecorationRanges, priorityRanges);
+      this.addInlineTextDecorations(editor, globalDecorationRanges, priorityRanges, lastDecoratorLine);
     }
     
     // Then add hex parameter decorations (lower priority, must avoid priority ranges)
     if (getSetting<boolean>("hexParameter.textEnabled")) {
-      this.addHexParameterDecorations(editor, globalDecorationRanges, priorityRanges);
+      this.addHexParameterDecorations(editor, globalDecorationRanges, priorityRanges, lastDecoratorLine);
     }
     
-    const decorationEntries = Array.from(globalDecorationRanges.entries());
-    for (const [decorationKey, ranges] of decorationEntries) {
-      const decoration = this.decorations.get(decorationKey);
-      if (decoration && ranges.length > 0) {
-        const validRanges = ranges.filter(range => range && !range.isEmpty);
-        if (validRanges.length > 0) {
-          editor.setDecorations(decoration, validRanges);
-        }
-      }
-    }
+    // Cache all decoration ranges for this document
+    this.allDecorationRanges.set(documentUri, globalDecorationRanges);
+    
+    // Apply all decorations normally
+    this.applyAllDecorations(editor, globalDecorationRanges);
   }
 
   private addHexColorDecorations(editor: vscode.TextEditor, globalDecorationRanges: Map<string, vscode.Range[]>) {
@@ -175,7 +177,7 @@ export class GameTextProvider implements vscode.Disposable {
     }
   }
 
-  private addGameTextDecorations(editor: vscode.TextEditor, globalDecorationRanges: Map<string, vscode.Range[]>, priorityRanges: vscode.Range[]) {
+  private addGameTextDecorations(editor: vscode.TextEditor, globalDecorationRanges: Map<string, vscode.Range[]>, priorityRanges: vscode.Range[], lastDecoratorLine: number = -1) {
     const text = editor.document.getText();
     const textEnabled = getSetting<boolean>("gameText.textEnabled") ?? true;
     const textStyle = getSetting<string>("gameText.textStyle") || "text";
@@ -207,6 +209,11 @@ export class GameTextProvider implements vscode.Disposable {
         if (this.ignoredLinesManager?.isLineIgnored(editor.document, textRange.start.line)) {
           continue;
         }
+        
+        // Skip if line is beyond the last color decorator line (for coordination)
+        if (lastDecoratorLine >= 0 && textRange.start.line > lastDecoratorLine) {
+          continue;
+        }
         // Use shared decoration key based on color and style to avoid conflicts
         const colorRgba = `${Math.round(color.red * 255)}_${Math.round(color.green * 255)}_${Math.round(color.blue * 255)}_${Math.round(color.alpha * 255)}`;
         const sharedDecorationKey = `text_${colorRgba}_${textStyle}`;
@@ -228,7 +235,7 @@ export class GameTextProvider implements vscode.Disposable {
     }
   }
 
-  private addInlineTextDecorations(editor: vscode.TextEditor, globalDecorationRanges: Map<string, vscode.Range[]>, priorityRanges: vscode.Range[]) {
+  private addInlineTextDecorations(editor: vscode.TextEditor, globalDecorationRanges: Map<string, vscode.Range[]>, priorityRanges: vscode.Range[], lastDecoratorLine: number = -1) {
     const text = editor.document.getText();
     const textStyle = getSetting<string>("inlineText.textStyle") || "text";
     
@@ -266,6 +273,11 @@ export class GameTextProvider implements vscode.Disposable {
             continue;
           }
           
+          // Skip if line is beyond the last color decorator line (for coordination)
+          if (lastDecoratorLine >= 0 && textRange.start.line > lastDecoratorLine) {
+            continue;
+          }
+          
           // Use shared decoration key based on color and style to avoid conflicts
           const colorRgba = `${Math.round(color.red * 255)}_${Math.round(color.green * 255)}_${Math.round(color.blue * 255)}_${Math.round(color.alpha * 255)}`;
           const sharedDecorationKey = `text_${colorRgba}_${textStyle}`;
@@ -288,7 +300,7 @@ export class GameTextProvider implements vscode.Disposable {
     }
   }
 
-  private addHexParameterDecorations(editor: vscode.TextEditor, globalDecorationRanges: Map<string, vscode.Range[]>, priorityRanges: vscode.Range[]) {
+  private addHexParameterDecorations(editor: vscode.TextEditor, globalDecorationRanges: Map<string, vscode.Range[]>, priorityRanges: vscode.Range[], lastDecoratorLine: number = -1) {
     const text = editor.document.getText();
     const textStyle = getSetting<string>("hexParameter.textStyle") || "text";
     
@@ -335,6 +347,11 @@ export class GameTextProvider implements vscode.Disposable {
         
         // Check if this line is ignored
         if (this.ignoredLinesManager?.isLineIgnored(editor.document, startPos.line)) {
+          continue;
+        }
+        
+        // Skip if line is beyond the last color decorator line (for coordination)
+        if (lastDecoratorLine >= 0 && startPos.line > lastDecoratorLine) {
           continue;
         }
         
@@ -557,10 +574,45 @@ export class GameTextProvider implements vscode.Disposable {
     editor.setDecorations(this.gameTextWarningDecoration, []);
   }
 
-  public dispose() {
+  /**
+   * Apply all decorations
+   */
+  private applyAllDecorations(editor: vscode.TextEditor, decorationRanges: Map<string, vscode.Range[]>): void {
+    const decorationEntries = Array.from(decorationRanges.entries());
+    for (const [decorationKey, ranges] of decorationEntries) {
+      const decoration = this.decorations.get(decorationKey);
+      if (decoration && ranges.length > 0) {
+        const validRanges = ranges.filter(range => range && !range.isEmpty);
+        if (validRanges.length > 0) {
+          editor.setDecorations(decoration, validRanges);
+        }
+      }
+    }
+  }
+
+
+
+
+  /**
+   * Simple refresh method - just clear cache and update decorations
+   */
+  public async refreshTextDecorations(): Promise<void> {
+    const activeEditor = vscode.window.activeTextEditor;
+    if (!activeEditor || !activeEditor.document) return;
+    
+    // Clear cache and update
+    const documentUri = activeEditor.document.uri.toString();
+    this.allDecorationRanges.delete(documentUri);
+    this.updateDecorations(activeEditor);
+    
+    vscode.window.showInformationMessage(t('messages.textDecorationsRefreshed'));
+  }
+
+  public dispose(): void {
     this.decorations.forEach(decoration => decoration.dispose());
     this.decorations.clear();
     this.gameTextWarningDecoration.dispose();
     this.disposables.forEach(d => d.dispose());
+    this.allDecorationRanges.clear();
   }
 }
