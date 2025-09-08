@@ -19,16 +19,6 @@ class PawnPicker implements vscode.Disposable {
     this.ignoredLinesManager = new IgnoredLinesManager(context);
     this.colorProvider = new ColorProvider(this.ignoredLinesManager);
     this.gameTextProvider = new GameTextProvider(this.ignoredLinesManager, this.colorProvider);
-    
-    // Set up coordination between color provider and text provider
-    this.colorProvider.setOnLastDecoratorLineChanged((documentUri: string, line: number) => {
-      // When color provider updates the last decorator line, immediately update text decorations
-      const activeEditor = vscode.window.activeTextEditor;
-      if (activeEditor && activeEditor.document.uri.toString() === documentUri) {
-        this.gameTextProvider.updateDecorations(activeEditor);
-      }
-    });
-    
     this.alphaWarningsManager = new AlphaWarningsManager();
     this.contextMenuCommands = new ContextMenuCommands();
     this.commandManager = new CommandManager(context, this.ignoredLinesManager, this.colorProvider, this.gameTextProvider);
@@ -117,6 +107,13 @@ class PawnPicker implements vscode.Disposable {
       // Only update if different
       if (currentVSCodeLimit !== decoratorLimit) {
         await editorConfig.update('colorDecoratorsLimit', decoratorLimit, vscode.ConfigurationTarget.Global);
+        
+        // Clear provider caches and refresh decorations when limit changes
+        this.colorProvider.clearCache();
+        const activeEditor = vscode.window.activeTextEditor;
+        if (activeEditor) {
+          this.gameTextProvider.updateDecorations(activeEditor);
+        }
         
         // Show notification about the change
         if (decoratorLimit > 1000) {
