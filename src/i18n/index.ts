@@ -49,6 +49,10 @@ export interface Translation {
     settingsUpdatedNormal: string;
     settingsUpdateFailed: string;
   };
+  warnings: {
+    invisibleColor: string;
+    unevenTildes: string;
+  };
   configuration: {
     disable: {
       description: string;
@@ -274,6 +278,10 @@ export class I18nManager {
         settingsUpdatedHigh: "PAWN Painter: Updated VS Code's color decorator limit to {0}. High limits may impact performance. VS Code restart may be required for full effect.",
         settingsUpdatedNormal: "PAWN Painter: Updated VS Code's color decorator limit to {0}. VS Code restart may be required for full effect.",
         settingsUpdateFailed: "PAWN Painter: Failed to update VS Code color decorator limit. You may need to manually set editor.colorDecoratorsLimit in VS Code settings.",
+      },
+      warnings: {
+        invisibleColor: " ⚠️ contains invisible colour",
+        unevenTildes: " ⚠️ Uneven tildes may crash players"
       },
       configuration: {
         disable: { description: "Disables the extension completely" },
