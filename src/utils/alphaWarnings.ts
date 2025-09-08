@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { getSetting } from "./helpers";
+import { t } from '../i18n';
 
 export class AlphaWarningsManager {
   private alphaColourDecorations = new Map<string, vscode.TextEditorDecorationType>();
@@ -9,7 +10,7 @@ export class AlphaWarningsManager {
   constructor() {
     this.alphaWarningDecoration = vscode.window.createTextEditorDecorationType({
       after: {
-        contentText: ' ⚠️ contains invisible colour',
+        contentText: t('warnings.invisibleColor'),
         color: 'orange',
         margin: '0 0 0 10px'
       }
