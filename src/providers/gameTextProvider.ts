@@ -19,7 +19,7 @@ export class GameTextProvider implements vscode.Disposable {
     
     this.gameTextWarningDecoration = vscode.window.createTextEditorDecorationType({
       after: {
-        contentText: t('warnings.unevenTildes'),
+        contentText: '', // Will be set dynamically
         color: '#FF6B6B',
         backgroundColor: 'rgba(255, 107, 107, 0.1)',
         border: '1px solid rgba(255, 107, 107, 0.5)',
@@ -533,6 +533,21 @@ export class GameTextProvider implements vscode.Disposable {
       }
     }
 
+    // Create decoration with current translation
+    const currentGameTextWarningDecoration = vscode.window.createTextEditorDecorationType({
+      after: {
+        contentText: t('warnings.unevenTildes'),
+        color: '#FF6B6B',
+        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+        border: '1px solid rgba(255, 107, 107, 0.5)',
+        margin: '0 0 0 10px'
+      }
+    });
+    
+    // Dispose previous decoration if it exists
+    this.gameTextWarningDecoration.dispose();
+    this.gameTextWarningDecoration = currentGameTextWarningDecoration;
+    
     editor.setDecorations(this.gameTextWarningDecoration, warningRanges);
   }
 

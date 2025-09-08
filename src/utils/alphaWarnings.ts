@@ -10,7 +10,7 @@ export class AlphaWarningsManager {
   constructor() {
     this.alphaWarningDecoration = vscode.window.createTextEditorDecorationType({
       after: {
-        contentText: t('warnings.invisibleColor'),
+        contentText: '', // Will be set dynamically
         color: 'orange',
         margin: '0 0 0 10px'
       }
@@ -91,6 +91,19 @@ export class AlphaWarningsManager {
       }
     }
 
+    // Create decoration with current translation
+    const currentAlphaWarningDecoration = vscode.window.createTextEditorDecorationType({
+      after: {
+        contentText: t('warnings.invisibleColor'),
+        color: 'orange',
+        margin: '0 0 0 10px'
+      }
+    });
+    
+    // Dispose previous decoration if it exists
+    this.alphaWarningDecoration.dispose();
+    this.alphaWarningDecoration = currentAlphaWarningDecoration;
+    
     editor.setDecorations(this.alphaWarningDecoration, alphaWarningRanges);
   }
 
