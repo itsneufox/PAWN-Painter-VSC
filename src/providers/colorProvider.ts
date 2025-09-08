@@ -13,6 +13,7 @@ export class ColorProvider implements vscode.DocumentColorProvider {
   private allColors = new Map<string, vscode.ColorInformation[]>();
   private lastDecoratorLines = new Map<string, number>(); // documentUri -> last line with color decorator
   private performanceWarningShown = new Set<string>(); // Track which limits have been warned about
+  private onLastDecoratorLineChanged?: (documentUri: string, line: number) => void;
   
   constructor(private ignoredLinesManager: IgnoredLinesManager) {
     this.setupEventHandlers();
@@ -37,6 +38,12 @@ export class ColorProvider implements vscode.DocumentColorProvider {
    */
   private setLastDecoratorLine(documentUri: string, lineNumber: number): void {
     this.lastDecoratorLines.set(documentUri, lineNumber);
+    // Notify text provider about the change
+    this.onLastDecoratorLineChanged?.(documentUri, lineNumber);
+  }
+
+  public setOnLastDecoratorLineChanged(callback: (documentUri: string, line: number) => void): void {
+    this.onLastDecoratorLineChanged = callback;
   }
 
   /**
