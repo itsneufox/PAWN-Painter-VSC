@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { t } from '../i18n';
 
 interface IgnoredLine {
   uri: string;
@@ -99,7 +100,7 @@ export class IgnoredLinesManager {
     });
     
     this.saveIgnoredLines();
-    vscode.window.showInformationMessage(`Line ${lineNumber + 1} colours will be ignored`);
+    vscode.window.showInformationMessage(t('messages.lineIgnored', lineNumber + 1));
   }
 
   public unignoreLine(document: vscode.TextDocument, lineNumber: number) {
@@ -112,9 +113,9 @@ export class IgnoredLinesManager {
     
     if (this.ignoredLines.length < initialLength) {
       this.saveIgnoredLines();
-      vscode.window.showInformationMessage(`Line ${lineNumber + 1} colours restored`);
+      vscode.window.showInformationMessage(t('messages.lineRestored', lineNumber + 1));
     } else {
-      vscode.window.showWarningMessage(`Line ${lineNumber + 1} was not ignored`);
+      vscode.window.showWarningMessage(t('messages.lineNotIgnored', lineNumber + 1));
     }
   }
 
@@ -135,7 +136,7 @@ export class IgnoredLinesManager {
     });
 
     if (ignoredCount > 0) {
-      vscode.window.showInformationMessage(`${ignoredCount} line(s) will have colours ignored`);
+      vscode.window.showInformationMessage(t('messages.linesIgnored', ignoredCount));
     }
   }
 
@@ -156,7 +157,7 @@ export class IgnoredLinesManager {
     });
 
     if (restoredCount > 0) {
-      vscode.window.showInformationMessage(`${restoredCount} line(s) colours restored`);
+      vscode.window.showInformationMessage(t('messages.linesRestored', restoredCount));
     }
   }
 
@@ -176,9 +177,9 @@ export class IgnoredLinesManager {
     }
 
     if (ignoredCount > 0) {
-      vscode.window.showInformationMessage(`Ignored all colours in this file (${ignoredCount} lines)`);
+      vscode.window.showInformationMessage(t('messages.fileIgnored', ignoredCount));
     } else {
-      vscode.window.showInformationMessage('All lines in this file were already ignored');
+      vscode.window.showInformationMessage(t('messages.fileAlreadyIgnored'));
     }
   }
 
@@ -194,9 +195,9 @@ export class IgnoredLinesManager {
     const removedCount = initialLength - this.ignoredLines.length;
     if (removedCount > 0) {
       this.saveIgnoredLines();
-      vscode.window.showInformationMessage(`Restored all colours in this file (${removedCount} lines)`);
+      vscode.window.showInformationMessage(t('messages.fileRestored', removedCount));
     } else {
-      vscode.window.showInformationMessage('No ignored lines found in this file');
+      vscode.window.showInformationMessage(t('messages.noIgnoredLinesInFile'));
     }
   }
 
@@ -204,12 +205,12 @@ export class IgnoredLinesManager {
     const count = this.ignoredLines.length;
     this.ignoredLines = [];
     this.saveIgnoredLines();
-    vscode.window.showInformationMessage(`Cleared ${count} ignored lines`);
+    vscode.window.showInformationMessage(t('messages.ignoredLinesCleared', count));
   }
 
   public showIgnoredLinesHistory() {
     if (this.ignoredLines.length === 0) {
-      vscode.window.showInformationMessage('No ignored lines found');
+      vscode.window.showInformationMessage(t('messages.noIgnoredLines'));
       return;
     }
 
